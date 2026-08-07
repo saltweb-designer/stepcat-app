@@ -2,10 +2,10 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { CalendarRange, CheckSquare, Link2, NotebookText, X } from "lucide-react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
-import type { EntryCategory } from "@/lib/types";
+import type { EntryCategory, EntryDoc } from "@/lib/types";
 
 const categories: { value: EntryCategory; label: string; icon: typeof CalendarRange }[] = [
   { value: "schedule", label: "スケジュール", icon: CalendarRange },
@@ -14,17 +14,25 @@ const categories: { value: EntryCategory; label: string; icon: typeof CalendarRa
   { value: "link", label: "リンク", icon: Link2 },
 ];
 
-export default function EntryFormModal({ onClose }: { onClose: () => void }) {
+export default function EntryFormModal({
+  onClose,
+  initialEntry,
+}: {
+  onClose: () => void;
+  /** 指定されている場合は編集モード（既存ドキュメントをupdateDoc）で動作する */
+  initialEntry?: EntryDoc;
+}) {
   const { user } = useAuth();
-  const [category, setCategory] = useState<EntryCategory>("schedule");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [allDay, setAllDay] = useState(true);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [title, setTitle] = useState("");
-  const [detail, setDetail] = useState("");
-  const [link, setLink] = useState("");
+  const isEdit = !!initialEntry;
+  const [category, setCategory] = useState<EntryCategory>(initialEntry?.category ?? "schedule");
+  const [startDate, setStartDate] = useState(initialEntry?.startDate ?? "");
+  const [endDate, setEndDate] = useState(initialEntry?.endDate ?? "");
+  const [allDay, setAllDay] = useState(initialEntry?.allDay ?? true);
+  const [startTime, setStartTime] = useState(initialEntry?.startTime ?? "");
+  const [endTime, setEndTime] = useState(initialEntry?.endTime ?? "");
+  const [title, setTitle] = useState(initialEntry?.title ?? "");
+  const [detail, setDetail] = useState(initialEntry?.detail ?? "");
+  const [link, setLink] = useState(initialEntry?.link ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +58,7 @@ export default function EntryFormModal({ onClose }: { onClose: () => void }) {
     try {
       const resolvedStartDate = startDate || new Date().toISOString().slice(0, 10);
       const resolvedEndDate = endDate || resolvedStartDate;
-      await addDoc(collection(db, "users", user.uid, "entries"), {
+      const payload = {
         category,
         title: trimmedTitle,
         detail: detail.trim(),
@@ -60,9 +68,17 @@ export default function EntryFormModal({ onClose }: { onClose: () => void }) {
         allDay,
         startTime: allDay ? "" : startTime,
         endTime: allDay ? "" : endTime,
-        done: false,
-        createdAt: serverTimestamp(),
-      });
+      };
+
+      if (isEdit && initialEntry) {
+        await updateDoc(doc(db, "users", user.uid, "entries", initialEntry.id), payload);
+      } else {
+        await addDoc(collection(db, "users", user.uid, "entries"), {
+          ...payload,
+          completedDates: [],
+          createdAt: serverTimestamp(),
+        });
+      }
       onClose();
     } catch (err) {
       console.error("保存に失敗しました", err);
@@ -85,7 +101,7 @@ export default function EntryFormModal({ onClose }: { onClose: () => void }) {
       >
         <header className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 id="entry-form-title" className="text-base font-semibold text-gray-900">
-            予定・タスクを追加
+            {isEdit ? "予定・タスクを編集" : "予定・タスクを追加"}
           </h2>
           <button
             type="button"
@@ -264,7 +280,7 @@ export default function EntryFormModal({ onClose }: { onClose: () => void }) {
               disabled={title.trim() === "" || saving}
               className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
-              {saving ? "保存中..." : "保存"}
+              {saving ? (isEdit ? "更新中..." : "保存中...") : isEdit ? "更新" : "保存"}
             </button>
           </div>
         </form>

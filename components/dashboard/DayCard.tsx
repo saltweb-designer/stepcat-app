@@ -2,6 +2,7 @@ import { NotebookText } from "lucide-react";
 import type { DayEntry } from "@/lib/types";
 import ScheduleBadge from "./ScheduleBadge";
 import TaskChecklist from "./TaskChecklist";
+import MemoList from "./MemoList";
 import LinkChips from "./LinkChips";
 
 function formatDate(dateStr: string) {
@@ -10,7 +11,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function DayCard({ entry }: { entry: DayEntry }) {
-  const doneCount = entry.tasks.filter((t) => t.done).length;
+  const doneCount = entry.tasks.filter((t) => t.completedDates.includes(entry.date)).length;
 
   return (
     <article
@@ -55,28 +56,18 @@ export default function DayCard({ entry }: { entry: DayEntry }) {
       {entry.schedules.length > 0 && (
         <div className="mb-3 flex flex-col gap-1.5">
           {entry.schedules.map((schedule) => (
-            <ScheduleBadge key={schedule.id} schedule={schedule} />
+            <ScheduleBadge key={schedule.id} entry={schedule} />
           ))}
         </div>
       )}
 
       <div className="mb-3">
-        <TaskChecklist tasks={entry.tasks} />
+        <TaskChecklist tasks={entry.tasks} date={entry.date} />
       </div>
 
       <div className="mb-3 flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2.5">
         <NotebookText className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
-        {entry.memos.length > 0 ? (
-          <div className="flex flex-1 flex-col gap-2">
-            {entry.memos.map((memo) => (
-              <p key={memo.id} className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600">
-                {memo.text}
-              </p>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400">まだメモがありません</p>
-        )}
+        <MemoList memos={entry.memos} />
       </div>
 
       <LinkChips links={entry.links} />

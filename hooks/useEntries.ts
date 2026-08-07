@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { EntryDoc } from "@/lib/types";
+import { enumerateDateRange } from "@/lib/week";
 
 export function useEntries(uid: string | undefined) {
   const [entries, setEntries] = useState<EntryDoc[]>([]);
@@ -19,18 +20,26 @@ export function useEntries(uid: string | undefined) {
         setEntries(
           snapshot.docs.map((doc) => {
             const data = doc.data();
+            const startDate = data.startDate;
+            const endDate = data.endDate ?? data.startDate;
+            // 旧形式（done: boolean のみ）からの移行: 完了済みだった場合は期間内の全日を完了扱いにする
+            const completedDates: string[] = Array.isArray(data.completedDates)
+              ? data.completedDates
+              : data.done
+                ? enumerateDateRange(startDate, endDate)
+                : [];
             return {
               id: doc.id,
               category: data.category,
               title: data.title ?? "",
               detail: data.detail ?? "",
               link: data.link ?? "",
-              startDate: data.startDate,
-              endDate: data.endDate ?? data.startDate,
+              startDate,
+              endDate,
               allDay: data.allDay ?? true,
               startTime: data.startTime ?? "",
               endTime: data.endTime ?? "",
-              done: data.done ?? false,
+              completedDates,
             } satisfies EntryDoc;
           })
         );
