@@ -1,0 +1,81 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { ArrowLeft, Send, Sparkles } from "lucide-react";
+import ChatBubble from "@/components/chat/ChatBubble";
+import { dummyConversation, canned, type ChatMessage } from "@/lib/dummy-chat";
+
+let nextId = dummyConversation.length + 1;
+
+export default function ChatPage() {
+  const [messages, setMessages] = useState<ChatMessage[]>(dummyConversation);
+  const [input, setInput] = useState("");
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmed = input.trim();
+    if (!trimmed) return;
+
+    const userMessage: ChatMessage = { id: `local-${nextId++}`, role: "user", text: trimmed };
+    setInput("");
+    setMessages((prev) => [
+      ...prev,
+      userMessage,
+      { id: `local-${nextId++}`, role: "ai", text: canned },
+    ]);
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col bg-gray-100">
+      <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 sm:px-6">
+          <Link
+            href="/"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            aria-label="ホームに戻る"
+          >
+            <ArrowLeft className="h-5 w-5" strokeWidth={2} />
+          </Link>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-black text-white shadow-sm">
+            <Sparkles className="h-5 w-5" strokeWidth={2} />
+          </span>
+          <div className="leading-tight">
+            <p className="text-sm font-semibold text-gray-900">AIに相談する</p>
+            <p className="text-xs text-gray-500">目標やタスクについて気軽に相談できます</p>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 overflow-y-auto px-4 py-5 sm:px-6">
+        {messages.map((message) => (
+          <ChatBubble key={message.id} message={message} />
+        ))}
+      </main>
+
+      <form
+        onSubmit={handleSubmit}
+        className="sticky bottom-0 border-t border-gray-200 bg-white/90 px-4 py-3 backdrop-blur-md sm:px-6"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      >
+        <div className="mx-auto flex max-w-2xl items-center gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="今週の目標について相談する..."
+            className="flex-1 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
+          />
+          <button
+            type="submit"
+            disabled={input.trim() === ""}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+            aria-label="送信"
+          >
+            <Send className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
