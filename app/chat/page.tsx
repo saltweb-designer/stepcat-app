@@ -4,26 +4,56 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ArrowLeft, Send, Sparkles } from "lucide-react";
 import ChatBubble from "@/components/chat/ChatBubble";
-import { dummyConversation, canned, type ChatMessage } from "@/lib/dummy-chat";
+import { initialConversation, type ChatMessage } from "@/lib/dummy-chat";
 
-let nextId = dummyConversation.length + 1;
+let nextId = initialConversation.length + 1;
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>(dummyConversation);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialConversation);
   const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const trimmed = input.trim();
-    if (!trimmed) return;
+    if (!trimmed || sending) return;
+
+    const history = messages.map((m) => ({
+      role: m.role === "ai" ? ("model" as const) : ("user" as const),
+      text: m.text,
+    }));
 
     const userMessage: ChatMessage = { id: `local-${nextId++}`, role: "user", text: trimmed };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    setMessages((prev) => [
-      ...prev,
-      userMessage,
-      { id: `local-${nextId++}`, role: "ai", text: canned },
-    ]);
+    setSending(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmed, history }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.text) {
+        throw new Error(data.error ?? "応答の取得に失敗しました");
+      }
+
+      setMessages((prev) => [...prev, { id: `local-${nextId++}`, role: "ai", text: data.text }]);
+    } catch (error) {
+      console.error("チャット応答の取得に失敗しました", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `local-${nextId++}`,
+          role: "ai",
+          text: "ごめんね、少し調子が悪いみたい。もう一度送ってもらえるかな？",
+        },
+      ]);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -51,6 +81,18 @@ export default function ChatPage() {
         {messages.map((message) => (
           <ChatBubble key={message.id} message={message} />
         ))}
+        {sending && (
+          <div className="flex items-end gap-2">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-white">
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+            </span>
+            <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400" />
+            </div>
+          </div>
+        )}
       </main>
 
       <form
@@ -64,11 +106,12 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="今週の目標について相談する..."
-            className="flex-1 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
+            disabled={sending}
+            className="flex-1 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20 disabled:opacity-60"
           />
           <button
             type="submit"
-            disabled={input.trim() === ""}
+            disabled={input.trim() === "" || sending}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
             aria-label="送信"
           >
