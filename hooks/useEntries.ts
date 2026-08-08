@@ -9,6 +9,7 @@ import { enumerateDateRange } from "@/lib/week";
 export function useEntries(uid: string | undefined) {
   const [entries, setEntries] = useState<EntryDoc[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!uid) return;
@@ -44,9 +45,15 @@ export function useEntries(uid: string | undefined) {
           })
         );
         setLoading(false);
+        setError(null);
       },
-      (error) => {
-        console.error("エントリの取得に失敗しました", error);
+      (err) => {
+        console.error("エントリの取得に失敗しました", err);
+        setError(
+          err.code === "permission-denied"
+            ? "データへのアクセス権限がありません。Firestoreのセキュリティルールをご確認ください。"
+            : "データの取得に失敗しました。しばらくしてから再度お試しください。"
+        );
         setLoading(false);
       }
     );
@@ -54,5 +61,5 @@ export function useEntries(uid: string | undefined) {
     return unsubscribe;
   }, [uid]);
 
-  return uid ? { entries, loading } : { entries: [], loading: false };
+  return uid ? { entries, loading, error } : { entries: [], loading: false, error: null };
 }

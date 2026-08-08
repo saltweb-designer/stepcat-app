@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/layout/Header";
 import LoginPrompt from "@/components/auth/LoginPrompt";
 import DayCard from "@/components/dashboard/DayCard";
+import ErrorBanner from "@/components/dashboard/ErrorBanner";
 import AddEntryButton from "@/components/entry-form/AddEntryButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEntries } from "@/hooks/useEntries";
@@ -25,7 +26,7 @@ function cellClassName(cell: MonthCell, isSelected: boolean, holidayName: string
 
 export default function CalendarPage() {
   const { user, loading } = useAuth();
-  const { entries } = useEntries(user?.uid);
+  const { entries, error } = useEntries(user?.uid);
 
   const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(today.getFullYear());
@@ -70,6 +71,7 @@ export default function CalendarPage() {
           </div>
         ) : user ? (
           <>
+            {error && <ErrorBanner message={error} />}
             <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-3 flex items-center justify-between">
                 <button

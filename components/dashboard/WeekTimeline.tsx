@@ -5,6 +5,7 @@ import Image from "next/image";
 import DayCard from "./DayCard";
 import PastSchedulesAccordion from "./PastSchedulesAccordion";
 import WeekSummaryCard from "./WeekSummaryCard";
+import ErrorBanner from "./ErrorBanner";
 import AddEntryButton from "@/components/entry-form/AddEntryButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEntries } from "@/hooks/useEntries";
@@ -13,7 +14,7 @@ import { buildWeekEntries } from "@/lib/build-week-entries";
 
 export default function WeekTimeline() {
   const { user } = useAuth();
-  const { entries, loading } = useEntries(user?.uid);
+  const { entries, loading, error } = useEntries(user?.uid);
 
   const weekDates = useMemo(() => getCurrentWeekDates(), []);
   const periodLabel = useMemo(() => formatWeekPeriodLabel(weekDates), [weekDates]);
@@ -46,6 +47,12 @@ export default function WeekTimeline() {
       <div className="mb-3">
         <AddEntryButton variant="compact" />
       </div>
+
+      {error && (
+        <div className="mb-3">
+          <ErrorBanner message={error} />
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-10">

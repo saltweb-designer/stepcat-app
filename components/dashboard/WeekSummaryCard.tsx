@@ -7,7 +7,7 @@ import { useWeekSummary } from "@/hooks/useWeekSummary";
 
 export default function WeekSummaryCard({ weekStartDate }: { weekStartDate: string }) {
   const { user } = useAuth();
-  const { text, loading, saveSummary } = useWeekSummary(user?.uid, weekStartDate);
+  const { text, loading, error, saveSummary } = useWeekSummary(user?.uid, weekStartDate);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
@@ -75,6 +75,8 @@ export default function WeekSummaryCard({ weekStartDate }: { weekStartDate: stri
         </div>
       ) : loading ? (
         <div className="mt-2 h-4 w-2/3 animate-pulse rounded bg-white/10" />
+      ) : error ? (
+        <p className="mt-1 text-sm font-semibold text-rose-300">{error}</p>
       ) : (
         <p className="mt-1 whitespace-pre-wrap text-sm font-semibold text-white">
           {text || "今週の概要はまだ入力されていません"}

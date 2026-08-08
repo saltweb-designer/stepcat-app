@@ -38,6 +38,8 @@ export interface ExternalApp {
   id: string;
   name: string;
   description: string;
+  /** スマホ表示など、省スペース時に使う短縮ラベル */
+  shortLabel: string;
   href: string;
   iconSrc: string;
 }
