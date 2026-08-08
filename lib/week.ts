@@ -1,12 +1,16 @@
 const DAY_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
 
+export function getDayLabel(iso: string): string {
+  return DAY_LABELS[new Date(`${iso}T00:00:00`).getDay()];
+}
+
 export interface WeekDate {
   date: string;
   dayLabel: string;
   isToday: boolean;
 }
 
-function toIsoDate(d: Date) {
+export function toIsoDate(d: Date) {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");

@@ -53,7 +53,7 @@ export default function WeekSummaryCard({ weekStartDate }: { weekStartDate: stri
             rows={3}
             autoFocus
             placeholder="今週の目標や意気込みを入力..."
-            className="w-full resize-none rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/40"
+            className="w-full resize-none rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-base text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/40"
           />
           <div className="flex justify-end gap-2">
             <button

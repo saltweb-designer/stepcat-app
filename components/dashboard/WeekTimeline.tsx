@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import DayCard from "./DayCard";
 import PastSchedulesAccordion from "./PastSchedulesAccordion";
 import WeekSummaryCard from "./WeekSummaryCard";
@@ -25,15 +26,21 @@ export default function WeekTimeline() {
 
   return (
     <section aria-labelledby="week-timeline-heading">
-      <div className="mb-4 rounded-2xl bg-gray-800 p-4 text-white shadow-sm sm:p-5">
-        <div className="flex items-end justify-between gap-2">
-          <h2 id="week-timeline-heading" className="text-sm font-bold text-white">
-            今週のタイムライン
-          </h2>
-          <span className="text-xs font-semibold text-white/60">{periodLabel}</span>
+      <div className="relative mb-4 overflow-hidden rounded-2xl bg-gray-800 p-4 text-white shadow-sm sm:p-5">
+        <div className="relative z-10 pr-16 sm:pr-20">
+          <div className="flex items-end justify-between gap-2">
+            <h2 id="week-timeline-heading" className="text-sm font-bold text-white">
+              今週のタイムライン
+            </h2>
+            <span className="text-xs font-semibold text-white/60">{periodLabel}</span>
+          </div>
+
+          {weekDates.length > 0 && <WeekSummaryCard weekStartDate={weekDates[0].date} />}
         </div>
 
-        {weekDates.length > 0 && <WeekSummaryCard weekStartDate={weekDates[0].date} />}
+        <div className="pointer-events-none absolute -bottom-2 -right-2 h-16 w-20 sm:h-20 sm:w-24">
+          <Image src="/home_ai.png" alt="" fill sizes="96px" className="object-contain object-bottom" />
+        </div>
       </div>
 
       <div className="mb-3">

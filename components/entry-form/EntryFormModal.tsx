@@ -17,16 +17,19 @@ const categories: { value: EntryCategory; label: string; icon: typeof CalendarRa
 export default function EntryFormModal({
   onClose,
   initialEntry,
+  initialDate,
 }: {
   onClose: () => void;
   /** 指定されている場合は編集モード（既存ドキュメントをupdateDoc）で動作する */
   initialEntry?: EntryDoc;
+  /** 新規作成時に、開始日・終了日の初期値としてセットする日付（例：日付ストリップからの登録） */
+  initialDate?: string;
 }) {
   const { user } = useAuth();
   const isEdit = !!initialEntry;
   const [category, setCategory] = useState<EntryCategory>(initialEntry?.category ?? "schedule");
-  const [startDate, setStartDate] = useState(initialEntry?.startDate ?? "");
-  const [endDate, setEndDate] = useState(initialEntry?.endDate ?? "");
+  const [startDate, setStartDate] = useState(initialEntry?.startDate ?? initialDate ?? "");
+  const [endDate, setEndDate] = useState(initialEntry?.endDate ?? initialDate ?? "");
   const [allDay, setAllDay] = useState(initialEntry?.allDay ?? true);
   const [startTime, setStartTime] = useState(initialEntry?.startTime ?? "");
   const [endTime, setEndTime] = useState(initialEntry?.endTime ?? "");
@@ -149,7 +152,7 @@ export default function EntryFormModal({
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
                   />
                 </div>
                 <div>
@@ -161,7 +164,7 @@ export default function EntryFormModal({
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
                   />
                 </div>
               </div>
@@ -201,7 +204,7 @@ export default function EntryFormModal({
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
                     />
                   </div>
                   <div>
@@ -213,7 +216,7 @@ export default function EntryFormModal({
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
                     />
                   </div>
                 </div>
@@ -230,7 +233,7 @@ export default function EntryFormModal({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="例：プロジェクト企画書 提出期限"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
               />
             </div>
 
@@ -244,7 +247,7 @@ export default function EntryFormModal({
                 onChange={(e) => setDetail(e.target.value)}
                 rows={3}
                 placeholder="詳細やメモを入力..."
-                className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
+                className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
               />
             </div>
 
@@ -260,7 +263,7 @@ export default function EntryFormModal({
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                   placeholder="https:// または Googleマップのリンク"
-                  className="w-full text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
+                  className="w-full text-base text-gray-700 placeholder-gray-400 focus:outline-none"
                 />
               </div>
             </div>

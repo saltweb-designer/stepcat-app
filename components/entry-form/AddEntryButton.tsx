@@ -6,8 +6,10 @@ import EntryFormModal from "./EntryFormModal";
 
 export default function AddEntryButton({
   variant = "default",
+  initialDate,
 }: {
   variant?: "default" | "compact";
+  initialDate?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -35,7 +37,7 @@ export default function AddEntryButton({
         </button>
       )}
 
-      {open && <EntryFormModal onClose={() => setOpen(false)} />}
+      {open && <EntryFormModal initialDate={initialDate} onClose={() => setOpen(false)} />}
     </>
   );
 }
