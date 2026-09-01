@@ -8,5 +8,8 @@ service cloud.firestore {
     match /users/{uid}/weekSummaries/{weekId} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+    match /users/{uid}/wellness/{date} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
   }
 }

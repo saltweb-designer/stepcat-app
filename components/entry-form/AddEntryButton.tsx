@@ -8,14 +8,23 @@ export default function AddEntryButton({
   variant = "default",
   initialDate,
 }: {
-  variant?: "default" | "compact";
+  variant?: "default" | "compact" | "bar";
   initialDate?: string;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      {variant === "compact" ? (
+      {variant === "bar" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex w-full items-center justify-center gap-2 bg-black px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-gray-800"
+        >
+          <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+          新規追加
+        </button>
+      ) : variant === "compact" ? (
         <div className="flex justify-end">
           <button
             type="button"

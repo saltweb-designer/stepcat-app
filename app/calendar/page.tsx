@@ -4,23 +4,21 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/layout/Header";
 import LoginPrompt from "@/components/auth/LoginPrompt";
-import DayCard from "@/components/dashboard/DayCard";
 import ErrorBanner from "@/components/dashboard/ErrorBanner";
-import AddEntryButton from "@/components/entry-form/AddEntryButton";
+import WeeklyReviewAccordion from "@/components/dashboard/WeeklyReviewAccordion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEntries } from "@/hooks/useEntries";
 import { getMonthGrid, type MonthCell } from "@/lib/month";
-import { getDayLabel, toIsoDate } from "@/lib/week";
-import { buildDayEntry, getDatesWithEntries } from "@/lib/build-week-entries";
+import { getDatesWithEntries } from "@/lib/build-week-entries";
 import { getHolidayName } from "@/lib/holidays";
 
 const WEEKDAY_HEADERS = ["月", "火", "水", "木", "金", "土", "日"];
 
-function cellClassName(cell: MonthCell, isSelected: boolean, holidayName: string | undefined) {
-  if (isSelected) return "bg-black text-white";
+function cellClassName(cell: MonthCell, isInOpenWeek: boolean, holidayName: string | undefined) {
   if (!cell.inCurrentMonth) return "text-gray-300 hover:bg-gray-50";
-  if (holidayName) return "text-rose-600 hover:bg-gray-50";
   if (cell.isToday) return "bg-gray-100 font-bold text-gray-900 hover:bg-gray-200";
+  if (isInOpenWeek) return "bg-gray-50 text-gray-900 hover:bg-gray-100";
+  if (holidayName) return "text-rose-600 hover:bg-gray-50";
   return "text-gray-700 hover:bg-gray-50";
 }
 
@@ -31,16 +29,22 @@ export default function CalendarPage() {
   const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1);
-  const [selectedDate, setSelectedDate] = useState(() => toIsoDate(today));
+  const [openWeekIndex, setOpenWeekIndex] = useState<number | null>(null);
 
   const weeks = useMemo(() => getMonthGrid(viewYear, viewMonth, today), [viewYear, viewMonth, today]);
+  const weeksInMonth = useMemo(() => weeks.filter((week) => week.some((cell) => cell.inCurrentMonth)), [weeks]);
   const datesWithEntries = useMemo(() => getDatesWithEntries(entries), [entries]);
-  const selectedEntry = useMemo(
-    () => buildDayEntry(selectedDate, getDayLabel(selectedDate), selectedDate === toIsoDate(today), entries),
-    [selectedDate, entries, today]
-  );
+
+  const weekIndexByDate = useMemo(() => {
+    const map = new Map<string, number>();
+    weeksInMonth.forEach((week, index) => {
+      for (const cell of week) map.set(cell.date, index);
+    });
+    return map;
+  }, [weeksInMonth]);
 
   const goToPrevMonth = () => {
+    setOpenWeekIndex(null);
     if (viewMonth === 1) {
       setViewYear((y) => y - 1);
       setViewMonth(12);
@@ -50,6 +54,7 @@ export default function CalendarPage() {
   };
 
   const goToNextMonth = () => {
+    setOpenWeekIndex(null);
     if (viewMonth === 12) {
       setViewYear((y) => y + 1);
       setViewMonth(1);
@@ -58,8 +63,14 @@ export default function CalendarPage() {
     }
   };
 
-  const [, selM, selD] = selectedDate.split("-");
-  const selectedLabel = `${Number(selM)}月${Number(selD)}日（${getDayLabel(selectedDate)}）`;
+  const handleSelectDate = (date: string) => {
+    const weekIndex = weekIndexByDate.get(date);
+    if (weekIndex === undefined) return;
+    setOpenWeekIndex((current) => (current === weekIndex ? null : weekIndex));
+    requestAnimationFrame(() => {
+      document.getElementById(`review-week-${weekIndex}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -107,19 +118,17 @@ export default function CalendarPage() {
                     {week.map((cell) => {
                       const holidayName = getHolidayName(cell.date);
                       const hasEntries = datesWithEntries.has(cell.date);
-                      const isSelected = cell.date === selectedDate;
+                      const isInOpenWeek = openWeekIndex !== null && weekIndexByDate.get(cell.date) === openWeekIndex;
                       return (
                         <button
                           key={cell.date}
                           type="button"
-                          onClick={() => setSelectedDate(cell.date)}
-                          className={`flex flex-col items-center gap-0.5 rounded-lg py-2 text-sm transition-colors ${cellClassName(cell, isSelected, holidayName)}`}
+                          onClick={() => handleSelectDate(cell.date)}
+                          className={`flex flex-col items-center gap-0.5 rounded-lg py-2 text-sm transition-colors ${cellClassName(cell, isInOpenWeek, holidayName)}`}
                         >
                           <span>{cell.day}</span>
                           <span
-                            className={`h-1 w-1 rounded-full ${
-                              hasEntries ? (isSelected ? "bg-white" : "bg-gray-900") : "bg-transparent"
-                            }`}
+                            className={`h-1 w-1 rounded-full ${hasEntries ? "bg-gray-900" : "bg-transparent"}`}
                           />
                         </button>
                       );
@@ -130,10 +139,19 @@ export default function CalendarPage() {
             </section>
 
             <section>
-              <h2 className="mb-2 text-sm font-semibold text-gray-700">{selectedLabel}の記録</h2>
-              <DayCard entry={selectedEntry} />
-              <div className="mt-3">
-                <AddEntryButton initialDate={selectedDate} />
+              <h2 className="mb-2 text-sm font-semibold text-gray-700">週間ごとの振り返り</h2>
+              <div className="flex flex-col gap-3">
+                {weeksInMonth.map((weekCells, index) => (
+                  <div key={weekCells[0].date} id={`review-week-${index}`}>
+                    <WeeklyReviewAccordion
+                      weekNumber={index + 1}
+                      cells={weekCells}
+                      entries={entries}
+                      open={openWeekIndex === index}
+                      onToggle={() => setOpenWeekIndex((current) => (current === index ? null : index))}
+                    />
+                  </div>
+                ))}
               </div>
             </section>
           </>

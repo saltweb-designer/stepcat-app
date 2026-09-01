@@ -4,6 +4,7 @@ import ScheduleBadge from "./ScheduleBadge";
 import TaskChecklist from "./TaskChecklist";
 import MemoList from "./MemoList";
 import LinkChips from "./LinkChips";
+import WellnessSection from "@/components/wellness/WellnessSection";
 
 function formatDate(dateStr: string) {
   const d = new Date(`${dateStr}T00:00:00`);
@@ -64,6 +65,8 @@ export default function DayCard({ entry }: { entry: DayEntry }) {
       <div className="mb-3">
         <TaskChecklist tasks={entry.tasks} date={entry.date} />
       </div>
+
+      <WellnessSection date={entry.date} />
 
       <div className="mb-3 flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2.5">
         <NotebookText className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />

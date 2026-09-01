@@ -34,6 +34,42 @@ export interface DayEntry {
   links: EntryDoc[];
 }
 
+/** Firestore の users/{uid}/wellness/{date} ドキュメントの形（date = YYYY-MM-DD） */
+export interface WellnessDoc {
+  /** 朝の体重 */
+  morningWeight: string;
+  /** お通じの有無 */
+  hasBowelMovement: boolean;
+  /** 睡眠時間 */
+  sleepHours: string;
+  /** むくみ */
+  hasSwelling: boolean;
+  swellingNote: string;
+  /** 張り感 */
+  hasTightness: boolean;
+  tightnessNote: string;
+  /** 疲労感 */
+  hasFatigue: boolean;
+  fatigueNote: string;
+  /** 体調の変化 */
+  hasConditionChange: boolean;
+  conditionChangeNote: string;
+}
+
+export const EMPTY_WELLNESS: WellnessDoc = {
+  morningWeight: "",
+  hasBowelMovement: false,
+  sleepHours: "",
+  hasSwelling: false,
+  swellingNote: "",
+  hasTightness: false,
+  tightnessNote: "",
+  hasFatigue: false,
+  fatigueNote: "",
+  hasConditionChange: false,
+  conditionChangeNote: "",
+};
+
 export interface ExternalApp {
   id: string;
   name: string;
