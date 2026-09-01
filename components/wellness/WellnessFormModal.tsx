@@ -4,6 +4,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { EMPTY_WELLNESS, type WellnessDoc } from "@/lib/types";
 
+const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
+const MINUTE_OPTIONS = [0, 10, 20, 30, 40, 50];
+
 function ToggleRow({
   label,
   checked,
@@ -167,17 +170,37 @@ export default function WellnessFormModal({
             </div>
 
             <div>
-              <label htmlFor="wellness-sleep" className="mb-1.5 block text-xs font-semibold text-gray-500">
-                睡眠時間
-              </label>
-              <input
-                id="wellness-sleep"
-                type="text"
-                value={form.sleepHours}
-                onChange={(e) => update("sleepHours", e.target.value)}
-                placeholder="例：7時間半"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
-              />
+              <span className="mb-1.5 block text-xs font-semibold text-gray-500">睡眠時間</span>
+              <div className="flex items-center gap-2">
+                <select
+                  aria-label="睡眠時間（時間）"
+                  value={form.sleepHours.hours}
+                  onChange={(e) =>
+                    update("sleepHours", { ...form.sleepHours, hours: Number(e.target.value) })
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                >
+                  {HOUR_OPTIONS.map((h) => (
+                    <option key={h} value={h}>
+                      {h}時間
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="睡眠時間（分）"
+                  value={form.sleepHours.minutes}
+                  onChange={(e) =>
+                    update("sleepHours", { ...form.sleepHours, minutes: Number(e.target.value) })
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                >
+                  {MINUTE_OPTIONS.map((m) => (
+                    <option key={m} value={m}>
+                      {m}分
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <ToggleRow

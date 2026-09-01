@@ -34,6 +34,12 @@ export interface DayEntry {
   links: EntryDoc[];
 }
 
+/** 睡眠時間（時・分） */
+export interface SleepDuration {
+  hours: number;
+  minutes: number;
+}
+
 /** Firestore の users/{uid}/wellness/{date} ドキュメントの形（date = YYYY-MM-DD） */
 export interface WellnessDoc {
   /** 朝の体重 */
@@ -41,7 +47,7 @@ export interface WellnessDoc {
   /** お通じの有無 */
   hasBowelMovement: boolean;
   /** 睡眠時間 */
-  sleepHours: string;
+  sleepHours: SleepDuration;
   /** むくみ */
   hasSwelling: boolean;
   swellingNote: string;
@@ -59,7 +65,7 @@ export interface WellnessDoc {
 export const EMPTY_WELLNESS: WellnessDoc = {
   morningWeight: "",
   hasBowelMovement: false,
-  sleepHours: "",
+  sleepHours: { hours: 0, minutes: 0 },
   hasSwelling: false,
   swellingNote: "",
   hasTightness: false,
@@ -69,6 +75,31 @@ export const EMPTY_WELLNESS: WellnessDoc = {
   hasConditionChange: false,
   conditionChangeNote: "",
 };
+
+function isSleepDuration(value: unknown): value is SleepDuration {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as SleepDuration).hours === "number" &&
+    typeof (value as SleepDuration).minutes === "number"
+  );
+}
+
+/** Firestore から読み込んだ生データを WellnessDoc に正規化する（旧形式の sleepHours: string からの移行を含む） */
+export function normalizeWellnessDoc(raw: Record<string, unknown>): WellnessDoc {
+  return {
+    ...EMPTY_WELLNESS,
+    ...raw,
+    sleepHours: isSleepDuration(raw.sleepHours) ? raw.sleepHours : EMPTY_WELLNESS.sleepHours,
+  } as WellnessDoc;
+}
+
+/** 睡眠時間を「7時間30分」のような表示用文字列に変換する。未入力（0時間0分）の場合は空文字を返す */
+export function formatSleepDuration(sleep: SleepDuration): string {
+  if (sleep.hours === 0 && sleep.minutes === 0) return "";
+  if (sleep.minutes === 0) return `${sleep.hours}時間`;
+  return `${sleep.hours}時間${sleep.minutes}分`;
+}
 
 export interface ExternalApp {
   id: string;

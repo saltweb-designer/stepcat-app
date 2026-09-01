@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { EMPTY_WELLNESS, type WellnessDoc } from "@/lib/types";
+import { normalizeWellnessDoc, type WellnessDoc } from "@/lib/types";
 
 export function useWellness(uid: string | undefined, date: string) {
   const [data, setData] = useState<WellnessDoc | null>(null);
@@ -17,7 +17,7 @@ export function useWellness(uid: string | undefined, date: string) {
     const unsubscribe = onSnapshot(
       ref,
       (snapshot) => {
-        setData(snapshot.exists() ? ({ ...EMPTY_WELLNESS, ...snapshot.data() } as WellnessDoc) : null);
+        setData(snapshot.exists() ? normalizeWellnessDoc(snapshot.data()) : null);
         setLoading(false);
         setError(null);
       },
