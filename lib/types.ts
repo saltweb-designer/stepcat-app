@@ -60,6 +60,8 @@ export interface WellnessDoc {
   /** 体調の変化 */
   hasConditionChange: boolean;
   conditionChangeNote: string;
+  /** 水分摂取量（ミリリットル） */
+  waterIntakeMl: number;
 }
 
 export const EMPTY_WELLNESS: WellnessDoc = {
@@ -74,6 +76,7 @@ export const EMPTY_WELLNESS: WellnessDoc = {
   fatigueNote: "",
   hasConditionChange: false,
   conditionChangeNote: "",
+  waterIntakeMl: 0,
 };
 
 function isSleepDuration(value: unknown): value is SleepDuration {
@@ -91,6 +94,7 @@ export function normalizeWellnessDoc(raw: Record<string, unknown>): WellnessDoc 
     ...EMPTY_WELLNESS,
     ...raw,
     sleepHours: isSleepDuration(raw.sleepHours) ? raw.sleepHours : EMPTY_WELLNESS.sleepHours,
+    waterIntakeMl: typeof raw.waterIntakeMl === "number" ? raw.waterIntakeMl : EMPTY_WELLNESS.waterIntakeMl,
   } as WellnessDoc;
 }
 

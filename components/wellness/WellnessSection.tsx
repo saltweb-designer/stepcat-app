@@ -27,6 +27,7 @@ function buildSummaryLines(data: WellnessDoc): { label: string; value: string }[
   for (const { flagKey, noteKey, label } of NOTE_FIELDS) {
     if (data[flagKey]) lines.push({ label, value: data[noteKey] || "あり" });
   }
+  if (data.waterIntakeMl > 0) lines.push({ label: "水分量", value: `${data.waterIntakeMl}ml` });
   return lines;
 }
 

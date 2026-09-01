@@ -6,6 +6,69 @@ import { EMPTY_WELLNESS, type WellnessDoc } from "@/lib/types";
 
 const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
 const MINUTE_OPTIONS = [0, 10, 20, 30, 40, 50];
+const WATER_QUICK_ADD_ML = [100, 200, 300, 350];
+const WATER_FINE_STEP_ML = 50;
+
+function WaterIntakeInput({
+  valueMl,
+  onChange,
+}: {
+  valueMl: number;
+  onChange: (v: number) => void;
+}) {
+  const clamp = (v: number) => Math.max(0, v);
+
+  return (
+    <div>
+      <span className="mb-1.5 block text-xs font-semibold text-gray-500">水分補給</span>
+
+      <div className="flex items-center justify-center gap-2 rounded-lg bg-gray-50 px-3 py-2.5">
+        <button
+          type="button"
+          onClick={() => onChange(clamp(valueMl - WATER_FINE_STEP_ML))}
+          aria-label={`${WATER_FINE_STEP_ML}ml減らす`}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-300 text-base font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+        >
+          −
+        </button>
+        <div className="flex items-baseline gap-1">
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={WATER_FINE_STEP_ML}
+            value={valueMl}
+            onChange={(e) => onChange(clamp(Number(e.target.value) || 0))}
+            aria-label="水分摂取量（ml、直接入力）"
+            className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-1 text-right text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-black/20"
+          />
+          <span className="text-sm font-medium text-gray-500">ml</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => onChange(clamp(valueMl + WATER_FINE_STEP_ML))}
+          aria-label={`${WATER_FINE_STEP_ML}ml増やす`}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-gray-300 text-base font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+        >
+          ＋
+        </button>
+      </div>
+
+      <div className="mt-2 grid grid-cols-4 gap-1.5">
+        {WATER_QUICK_ADD_ML.map((amount) => (
+          <button
+            key={amount}
+            type="button"
+            onClick={() => onChange(clamp(valueMl + amount))}
+            className="rounded-lg border border-gray-300 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-100"
+          >
+            +{amount}ml
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ToggleRow({
   label,
@@ -202,6 +265,11 @@ export default function WellnessFormModal({
                 </select>
               </div>
             </div>
+
+            <WaterIntakeInput
+              valueMl={form.waterIntakeMl}
+              onChange={(v) => update("waterIntakeMl", v)}
+            />
 
             <ToggleRow
               label="むくみ"
