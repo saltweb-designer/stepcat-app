@@ -25,7 +25,7 @@ function buildSummaryLines(data: WellnessDoc): { label: string; value: string }[
   if (sleepLabel) lines.push({ label: "睡眠時間", value: sleepLabel });
   lines.push({ label: "お通じ", value: data.hasBowelMovement ? "あり" : "なし" });
   for (const { flagKey, noteKey, label } of NOTE_FIELDS) {
-    if (data[flagKey]) lines.push({ label, value: data[noteKey] || "あり" });
+    lines.push({ label, value: data[flagKey] ? data[noteKey] || "あり" : "無し" });
   }
   if (data.waterIntakeMl > 0) lines.push({ label: "水分量", value: `${data.waterIntakeMl}ml` });
   return lines;
