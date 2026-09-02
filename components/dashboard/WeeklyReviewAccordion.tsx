@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import type { MonthCell } from "@/lib/month";
 import type { EntryDoc } from "@/lib/types";
@@ -56,8 +57,13 @@ export default function WeeklyReviewAccordion({
 
       {open && (
         <div className="flex flex-col gap-4 border-t border-gray-100 p-4 pt-4 sm:p-5 sm:pt-4">
-          <div className="rounded-2xl bg-gray-800 p-4 text-white shadow-sm sm:p-5">
-            <WeekSummaryCard weekStartDate={cells[0].date} />
+          <div className="relative overflow-hidden rounded-2xl bg-gray-800 p-4 text-white shadow-sm sm:p-5">
+            <div className="relative z-10 pr-16 sm:pr-20">
+              <WeekSummaryCard weekStartDate={cells[0].date} />
+            </div>
+            <div className="pointer-events-none absolute -bottom-2 -right-2 h-16 w-20 sm:h-20 sm:w-24">
+              <Image src="/home_ai.png" alt="" fill sizes="96px" className="object-contain object-bottom" />
+            </div>
           </div>
           {cellsInMonth.map((cell) => {
             const entry = buildDayEntry(cell.date, getDayLabel(cell.date), cell.date === todayIso, entries);
