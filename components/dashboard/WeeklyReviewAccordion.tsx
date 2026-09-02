@@ -7,6 +7,7 @@ import type { EntryDoc } from "@/lib/types";
 import { getDayLabel, toIsoDate } from "@/lib/week";
 import { buildDayEntry, getDatesWithEntries } from "@/lib/build-week-entries";
 import DayCard from "./DayCard";
+import WeekSummaryCard from "./WeekSummaryCard";
 
 function formatRangeLabel(cells: MonthCell[]) {
   const format = (iso: string) => {
@@ -55,6 +56,9 @@ export default function WeeklyReviewAccordion({
 
       {open && (
         <div className="flex flex-col gap-4 border-t border-gray-100 p-4 pt-4 sm:p-5 sm:pt-4">
+          <div className="rounded-2xl bg-gray-800 p-4 text-white shadow-sm sm:p-5">
+            <WeekSummaryCard weekStartDate={cells[0].date} />
+          </div>
           {cellsInMonth.map((cell) => {
             const entry = buildDayEntry(cell.date, getDayLabel(cell.date), cell.date === todayIso, entries);
             return <DayCard key={cell.date} entry={entry} />;
