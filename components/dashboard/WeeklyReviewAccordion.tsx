@@ -20,6 +20,12 @@ function formatRangeLabel(cells: MonthCell[]) {
   return `${format(cells[0].date)}〜${format(cells[cells.length - 1].date)}`;
 }
 
+const SUMMARY_PREVIEW_LIMIT = 20;
+
+function truncateSummaryPreview(text: string) {
+  return text.length > SUMMARY_PREVIEW_LIMIT ? `${text.slice(0, SUMMARY_PREVIEW_LIMIT)}...` : text;
+}
+
 export default function WeeklyReviewAccordion({
   weekNumber,
   cells,
@@ -60,7 +66,7 @@ export default function WeeklyReviewAccordion({
           <span className="shrink-0 text-xs text-gray-400">記録 {recordedCount}/{cellsInMonth.length}日</span>
         </span>
         {summaryText && (
-          <span className="truncate pl-6 text-xs text-gray-500">{summaryText}</span>
+          <span className="truncate pl-6 text-xs text-gray-500">{truncateSummaryPreview(summaryText)}</span>
         )}
       </button>
 
