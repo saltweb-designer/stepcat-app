@@ -19,7 +19,7 @@ export default function AddEntryButton({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex w-full items-center justify-center gap-2 bg-black px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-gray-800"
+          className="flex flex-1 items-center justify-center gap-2 bg-black px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-gray-800"
         >
           <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />
           新規追加
