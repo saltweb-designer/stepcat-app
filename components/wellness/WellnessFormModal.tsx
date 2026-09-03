@@ -183,17 +183,27 @@ export default function WellnessFormModal({
           <h2 id="wellness-form-title" className="text-base font-semibold text-gray-900">
             {dateLabel}の体調記録
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-            aria-label="閉じる"
-          >
-            <X className="h-5 w-5" strokeWidth={2} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="submit"
+              form="wellness-form"
+              disabled={saving}
+              className="rounded-full bg-black px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              {saving ? "保存中..." : "保存"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              aria-label="閉じる"
+            >
+              <X className="h-5 w-5" strokeWidth={2} />
+            </button>
+          </div>
         </header>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-5 py-4">
+        <form id="wellness-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-5 py-4">
           <div className="flex flex-col gap-5">
             <div>
               <label htmlFor="wellness-weight" className="mb-1.5 block text-xs font-semibold text-gray-500">
