@@ -7,10 +7,10 @@ export default function MemoList({ memos }: { memos: EntryDoc[] }) {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-2">
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
       {memos.map((memo) => (
         <div key={memo.id} className="flex items-start justify-between gap-2">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600">
+          <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-600">
             {memo.detail || memo.title}
           </p>
           <EntryActions entry={memo} />
