@@ -6,15 +6,14 @@ import Header from "@/components/layout/Header";
 import LoginPrompt from "@/components/auth/LoginPrompt";
 import ErrorBanner from "@/components/dashboard/ErrorBanner";
 import AiQuickAskBox from "@/components/notes/AiQuickAskBox";
+import NewNoteCard from "@/components/notes/NewNoteCard";
 import NoteCard from "@/components/notes/NoteCard";
 import NoteCategoryFilter, { ALL_CATEGORIES } from "@/components/notes/NoteCategoryFilter";
 import NoteCategoryModal from "@/components/notes/NoteCategoryModal";
-import NoteFormModal from "@/components/notes/NoteFormModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNoteCategories } from "@/hooks/useNoteCategories";
 import { useNotes } from "@/hooks/useNotes";
 import { UNCATEGORIZED_ID } from "@/lib/notes";
-import type { NoteDoc } from "@/lib/types";
 
 export default function NotesPage() {
   const { user, loading } = useAuth();
@@ -28,8 +27,6 @@ export default function NotesPage() {
   } = useNoteCategories(user?.uid);
 
   const [selectedFilter, setSelectedFilter] = useState<string>(ALL_CATEGORIES);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingNote, setEditingNote] = useState<NoteDoc | null>(null);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
   const categoryNameById = useMemo(() => {
@@ -48,23 +45,7 @@ export default function NotesPage() {
     return notes.filter((note) => note.categoryId === selectedFilter);
   }, [notes, selectedFilter, categoryNameById]);
 
-  const openNewNoteForm = () => {
-    setEditingNote(null);
-    setFormOpen(true);
-  };
-
-  const openEditNoteForm = (note: NoteDoc) => {
-    setEditingNote(note);
-    setFormOpen(true);
-  };
-
-  const handleSaveNote = async (categoryId: string, text: string) => {
-    if (editingNote) {
-      await updateNote(editingNote.id, categoryId, text);
-    } else {
-      await addNote(categoryId, text);
-    }
-  };
+  const newNoteCategoryId = selectedFilter === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedFilter;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -80,25 +61,23 @@ export default function NotesPage() {
 
             <AiQuickAskBox />
 
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-                <NotebookPen className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
-                ノート
-              </h2>
-              <button
-                type="button"
-                onClick={openNewNoteForm}
-                className="flex items-center gap-1.5 rounded-full bg-black px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-gray-800"
-              >
-                新規ノート
-              </button>
-            </div>
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+              <NotebookPen className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
+              ノート
+            </h2>
 
             <NoteCategoryFilter
               categories={categories}
               selected={selectedFilter}
               onSelect={setSelectedFilter}
               onManage={() => setCategoryModalOpen(true)}
+            />
+
+            <NewNoteCard
+              categories={categories}
+              initialCategoryId={newNoteCategoryId}
+              onCreate={addNote}
+              onManageCategories={() => setCategoryModalOpen(true)}
             />
 
             {filteredNotes.length === 0 ? (
@@ -110,9 +89,11 @@ export default function NotesPage() {
                     key={note.id}
                     note={note}
                     categoryName={categoryNameFor(note.categoryId)}
-                    onEdit={() => openEditNoteForm(note)}
+                    categories={categories}
+                    onSave={(categoryId, text) => updateNote(note.id, categoryId, text)}
                     onDuplicate={() => duplicateNote(note)}
                     onDelete={() => deleteNote(note.id)}
+                    onManageCategories={() => setCategoryModalOpen(true)}
                   />
                 ))}
               </div>
@@ -122,17 +103,6 @@ export default function NotesPage() {
           <LoginPrompt />
         )}
       </main>
-
-      {formOpen && (
-        <NoteFormModal
-          initialNote={editingNote ?? undefined}
-          initialCategoryId={selectedFilter === ALL_CATEGORIES ? undefined : selectedFilter}
-          categories={categories}
-          onSave={handleSaveNote}
-          onManageCategories={() => setCategoryModalOpen(true)}
-          onClose={() => setFormOpen(false)}
-        />
-      )}
 
       {categoryModalOpen && (
         <NoteCategoryModal
