@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, MessageCircle } from "lucide-react";
+import { CalendarDays, Home, NotebookPen } from "lucide-react";
 
 const tabs = [
   { href: "/", label: "ホーム", icon: Home },
   { href: "/calendar", label: "カレンダー", icon: CalendarDays },
-  { href: "/chat", label: "AIへ相談", icon: MessageCircle },
+  { href: "/notes", label: "ノート", icon: NotebookPen },
 ];
 
 export default function BottomNav() {

@@ -7,6 +7,11 @@ export interface MonthCell {
   isToday: boolean;
 }
 
+/** 年月から Firestore のドキュメントIDに使う "YYYY-MM" 形式のキーを作る */
+export function toMonthKey(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
 /**
  * 指定した年月（month: 1〜12）の月間カレンダーを、月曜始まりの週の配列として返す。
  * 前後の月の日付でグリッドの隙間を埋める。

@@ -1,15 +1,22 @@
 "use client";
 
+import { useMemo } from "react";
 import Header from "@/components/layout/Header";
 import AppLinksSection from "@/components/dashboard/AppLinksSection";
 import DateStrip from "@/components/dashboard/DateStrip";
+import MonthGoalCard from "@/components/dashboard/MonthGoalCard";
 import WeekTimeline from "@/components/dashboard/WeekTimeline";
 import AddEntryButton from "@/components/entry-form/AddEntryButton";
 import LoginPrompt from "@/components/auth/LoginPrompt";
 import { useAuth } from "@/contexts/AuthContext";
+import { toMonthKey } from "@/lib/month";
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const currentMonthKey = useMemo(() => {
+    const today = new Date();
+    return toMonthKey(today.getFullYear(), today.getMonth() + 1);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -22,6 +29,7 @@ export default function Home() {
         ) : user ? (
           <>
             <AppLinksSection />
+            <MonthGoalCard monthKey={currentMonthKey} monthLabel="今月" />
             <DateStrip />
             <WeekTimeline />
             <AddEntryButton />

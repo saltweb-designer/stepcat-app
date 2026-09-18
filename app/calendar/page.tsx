@@ -5,10 +5,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/layout/Header";
 import LoginPrompt from "@/components/auth/LoginPrompt";
 import ErrorBanner from "@/components/dashboard/ErrorBanner";
+import MonthGoalCard from "@/components/dashboard/MonthGoalCard";
 import WeeklyReviewAccordion from "@/components/dashboard/WeeklyReviewAccordion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEntries } from "@/hooks/useEntries";
-import { getMonthGrid, type MonthCell } from "@/lib/month";
+import { getMonthGrid, toMonthKey, type MonthCell } from "@/lib/month";
 import { getDatesWithEntries } from "@/lib/build-week-entries";
 import { getHolidayName } from "@/lib/holidays";
 
@@ -31,6 +32,7 @@ export default function CalendarPage() {
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1);
   const [openWeekIndex, setOpenWeekIndex] = useState<number | null>(null);
 
+  const viewMonthKey = useMemo(() => toMonthKey(viewYear, viewMonth), [viewYear, viewMonth]);
   const weeks = useMemo(() => getMonthGrid(viewYear, viewMonth, today), [viewYear, viewMonth, today]);
   const weeksInMonth = useMemo(() => weeks.filter((week) => week.some((cell) => cell.inCurrentMonth)), [weeks]);
   const datesWithEntries = useMemo(() => getDatesWithEntries(entries), [entries]);
@@ -83,6 +85,26 @@ export default function CalendarPage() {
         ) : user ? (
           <>
             {error && <ErrorBanner message={error} />}
+
+            <MonthGoalCard monthKey={viewMonthKey} monthLabel={`${viewYear}年${viewMonth}月`} />
+
+            <section>
+              <h2 className="mb-2 text-sm font-semibold text-gray-700">週間ごとの振り返り</h2>
+              <div className="flex flex-col gap-3">
+                {weeksInMonth.map((weekCells, index) => (
+                  <div key={weekCells[0].date} id={`review-week-${index}`}>
+                    <WeeklyReviewAccordion
+                      weekNumber={index + 1}
+                      cells={weekCells}
+                      entries={entries}
+                      open={openWeekIndex === index}
+                      onToggle={() => setOpenWeekIndex((current) => (current === index ? null : index))}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
             <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-3 flex items-center justify-between">
                 <button
@@ -133,23 +155,6 @@ export default function CalendarPage() {
                         </button>
                       );
                     })}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h2 className="mb-2 text-sm font-semibold text-gray-700">週間ごとの振り返り</h2>
-              <div className="flex flex-col gap-3">
-                {weeksInMonth.map((weekCells, index) => (
-                  <div key={weekCells[0].date} id={`review-week-${index}`}>
-                    <WeeklyReviewAccordion
-                      weekNumber={index + 1}
-                      cells={weekCells}
-                      entries={entries}
-                      open={openWeekIndex === index}
-                      onToggle={() => setOpenWeekIndex((current) => (current === index ? null : index))}
-                    />
                   </div>
                 ))}
               </div>

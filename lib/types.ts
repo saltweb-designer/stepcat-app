@@ -105,6 +105,22 @@ export function formatSleepDuration(sleep: SleepDuration): string {
   return `${sleep.hours}時間${sleep.minutes}分`;
 }
 
+/** Firestore の users/{uid}/noteCategories/{id} ドキュメントの形 */
+export interface NoteCategoryDoc {
+  id: string;
+  name: string;
+  /** 表示順（小さいほど先頭） */
+  order: number;
+}
+
+/** Firestore の users/{uid}/notes/{id} ドキュメントの形。日付に紐づかない自由なノート */
+export interface NoteDoc {
+  id: string;
+  /** NoteCategoryDoc.id への参照。空文字、または削除済みカテゴリを指す場合は未分類として扱う */
+  categoryId: string;
+  text: string;
+}
+
 export interface ExternalApp {
   id: string;
   name: string;
