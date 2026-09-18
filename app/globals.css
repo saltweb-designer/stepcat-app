@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/*
+ * ネイティブの日付・時刻inputは、カレンダー/時計アイコン部分が独自の背景を持ち、
+ * 角丸を無視して描画されるため、inputの丸みから少しはみ出して見えることがある。
+ * アイコン側にも同じ丸みと内側の余白を与えて、input自体の枠内に収める。
+ */
+input[type="date"],
+input[type="time"] {
+  box-sizing: border-box;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  margin-inline-start: 4px;
+  border-radius: 9999px;
+}

@@ -162,7 +162,7 @@ export default function EntryFormModal({
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    className="box-border w-full min-w-0 appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
                   />
                 </div>
                 <div className="min-w-0">
@@ -174,7 +174,7 @@ export default function EntryFormModal({
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    className="box-border w-full min-w-0 appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
                   />
                 </div>
               </div>
@@ -214,7 +214,7 @@ export default function EntryFormModal({
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                      className="box-border w-full min-w-0 appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
                     />
                   </div>
                   <div className="min-w-0">
@@ -226,7 +226,7 @@ export default function EntryFormModal({
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                      className="box-border w-full min-w-0 appearance-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
                     />
                   </div>
                 </div>
