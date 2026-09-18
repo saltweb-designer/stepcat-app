@@ -106,17 +106,27 @@ export default function EntryFormModal({
           <h2 id="entry-form-title" className="text-base font-semibold text-gray-900">
             {isEdit ? "予定・タスクを編集" : "予定・タスクを追加"}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-            aria-label="閉じる"
-          >
-            <X className="h-5 w-5" strokeWidth={2} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="submit"
+              form="entry-form"
+              disabled={title.trim() === "" || saving}
+              className="rounded-full bg-black px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              {saving ? (isEdit ? "更新中..." : "保存中...") : isEdit ? "更新" : "保存"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              aria-label="閉じる"
+            >
+              <X className="h-5 w-5" strokeWidth={2} />
+            </button>
+          </div>
         </header>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-5 py-4">
+        <form id="entry-form" onSubmit={handleSubmit} className="flex-1 overflow-x-hidden overflow-y-auto px-5 py-4">
           <div className="flex flex-col gap-5">
             <div>
               <label className="mb-2 block text-xs font-semibold text-gray-500">カテゴリ</label>
@@ -143,7 +153,7 @@ export default function EntryFormModal({
             <div>
               <label className="mb-2 block text-xs font-semibold text-gray-500">期間</label>
               <div className="grid grid-cols-2 gap-2">
-                <div>
+                <div className="min-w-0">
                   <label htmlFor="entry-start-date" className="mb-1 block text-[11px] text-gray-400">
                     開始日
                   </label>
@@ -152,10 +162,10 @@ export default function EntryFormModal({
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    className="w-full min-w-0 rounded-lg border border-gray-300 px-2 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20 sm:px-3"
                   />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label htmlFor="entry-end-date" className="mb-1 block text-[11px] text-gray-400">
                     終了日
                   </label>
@@ -164,7 +174,7 @@ export default function EntryFormModal({
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    className="w-full min-w-0 rounded-lg border border-gray-300 px-2 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20 sm:px-3"
                   />
                 </div>
               </div>
@@ -195,7 +205,7 @@ export default function EntryFormModal({
 
               {!allDay && (
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="entry-start-time" className="mb-1 block text-[11px] text-gray-400">
                       開始時間
                     </label>
@@ -204,10 +214,10 @@ export default function EntryFormModal({
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                      className="w-full min-w-0 rounded-lg border border-gray-300 px-2 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20 sm:px-3"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="entry-end-time" className="mb-1 block text-[11px] text-gray-400">
                       終了時間
                     </label>
@@ -216,7 +226,7 @@ export default function EntryFormModal({
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                      className="w-full min-w-0 rounded-lg border border-gray-300 px-2 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20 sm:px-3"
                     />
                   </div>
                 </div>
