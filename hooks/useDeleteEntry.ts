@@ -1,19 +1,18 @@
 "use client";
 
-import { doc, deleteDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { deleteEntryWithScope } from "@/lib/entry-mutations";
+import type { EditScope } from "@/lib/recurrence";
+import type { EntryDoc } from "@/lib/types";
 
+/** 削除の確認は呼び出し側（確認ダイアログ・範囲選択ダイアログ）で行う */
 export function useDeleteEntry() {
   const { user } = useAuth();
 
-  return async (id: string) => {
+  return async (entry: EntryDoc, scope: EditScope = "all", date?: string) => {
     if (!user) return;
-    const confirmed = window.confirm("この予定を削除してもよろしいですか？");
-    if (!confirmed) return;
-
     try {
-      await deleteDoc(doc(db, "users", user.uid, "entries", id));
+      await deleteEntryWithScope(user.uid, entry, scope, date);
     } catch (error) {
       console.error("削除に失敗しました", error);
     }

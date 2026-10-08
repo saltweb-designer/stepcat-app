@@ -3,7 +3,7 @@ import { detectLinkType } from "@/lib/build-week-entries";
 import EntryActions from "@/components/entry-form/EntryActions";
 import type { EntryDoc } from "@/lib/types";
 
-export default function LinkChips({ links }: { links: EntryDoc[] }) {
+export default function LinkChips({ links, date }: { links: EntryDoc[]; date: string }) {
   if (links.length === 0) return null;
 
   return (
@@ -28,7 +28,7 @@ export default function LinkChips({ links }: { links: EntryDoc[] }) {
               )}
               <span className="max-w-[8rem] truncate">{link.title || link.link}</span>
             </a>
-            <EntryActions entry={link} className="flex shrink-0 items-center gap-0.5" />
+            <EntryActions entry={link} date={date} className="flex shrink-0 items-center gap-0.5" />
           </div>
         );
       })}

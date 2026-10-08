@@ -2,10 +2,16 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { CalendarRange, CheckSquare, Link2, NotebookText, X } from "lucide-react";
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { updateEntryWithScope, type EntryPayload } from "@/lib/entry-mutations";
+import { addDays, listOccurrences, WEEKDAY_OPTIONS, type EditScope } from "@/lib/recurrence";
+import { toIsoDate } from "@/lib/week";
 import type { EntryCategory, EntryDoc } from "@/lib/types";
+
+/** 曜日指定で終了日が空欄の場合に繰り返す期間（52週） */
+const DEFAULT_REPEAT_DAYS = 7 * 52 - 1;
 
 const categories: { value: EntryCategory; label: string; icon: typeof CalendarRange }[] = [
   { value: "schedule", label: "スケジュール", icon: CalendarRange },
@@ -18,18 +24,32 @@ export default function EntryFormModal({
   onClose,
   initialEntry,
   initialDate,
+  scope = "all",
+  occurrenceDate,
 }: {
   onClose: () => void;
   /** 指定されている場合は編集モード（既存ドキュメントをupdateDoc）で動作する */
   initialEntry?: EntryDoc;
   /** 新規作成時に、開始日・終了日の初期値としてセットする日付（例：日付ストリップからの登録） */
   initialDate?: string;
+  /** 編集モード時、変更を反映する範囲（この日のみ / この日以降 / すべて） */
+  scope?: EditScope;
+  /** scope が single / following の場合の基準日 */
+  occurrenceDate?: string;
 }) {
   const { user } = useAuth();
   const isEdit = !!initialEntry;
+  const effectiveScope: EditScope = occurrenceDate ? scope : "all";
   const [category, setCategory] = useState<EntryCategory>(initialEntry?.category ?? "schedule");
-  const [startDate, setStartDate] = useState(initialEntry?.startDate ?? initialDate ?? "");
-  const [endDate, setEndDate] = useState(initialEntry?.endDate ?? initialDate ?? "");
+  const [startDate, setStartDate] = useState(
+    effectiveScope === "all" ? (initialEntry?.startDate ?? initialDate ?? "") : (occurrenceDate ?? "")
+  );
+  const [endDate, setEndDate] = useState(
+    effectiveScope === "single" ? (occurrenceDate ?? "") : (initialEntry?.endDate ?? initialDate ?? "")
+  );
+  const [weekdays, setWeekdays] = useState<number[]>(
+    effectiveScope === "single" ? [] : (initialEntry?.weekdays ?? [])
+  );
   const [allDay, setAllDay] = useState(initialEntry?.allDay ?? true);
   const [startTime, setStartTime] = useState(initialEntry?.startTime ?? "");
   const [endTime, setEndTime] = useState(initialEntry?.endTime ?? "");
@@ -56,12 +76,29 @@ export default function EntryFormModal({
     const trimmedTitle = title.trim();
     if (!trimmedTitle || !user || saving) return;
 
+    const resolvedStartDate = startDate || toIsoDate(new Date());
+    const resolvedEndDate =
+      endDate || (weekdays.length > 0 ? addDays(resolvedStartDate, DEFAULT_REPEAT_DAYS) : resolvedStartDate);
+    if (resolvedEndDate < resolvedStartDate) {
+      setError("終了日は開始日以降の日付を指定してください。");
+      return;
+    }
+    const resolvedWeekdays = weekdays.length === 7 ? [] : [...weekdays].sort();
+    const occurrences = listOccurrences({
+      startDate: resolvedStartDate,
+      endDate: resolvedEndDate,
+      weekdays: resolvedWeekdays,
+      excludedDates: [],
+    });
+    if (occurrences.length === 0) {
+      setError("期間内に選択した曜日の日付がありません。");
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
-      const resolvedStartDate = startDate || new Date().toISOString().slice(0, 10);
-      const resolvedEndDate = endDate || resolvedStartDate;
-      const payload = {
+      const payload: EntryPayload = {
         category,
         title: trimmedTitle,
         detail: detail.trim(),
@@ -71,14 +108,16 @@ export default function EntryFormModal({
         allDay,
         startTime: allDay ? "" : startTime,
         endTime: allDay ? "" : endTime,
+        weekdays: resolvedWeekdays,
       };
 
       if (isEdit && initialEntry) {
-        await updateDoc(doc(db, "users", user.uid, "entries", initialEntry.id), payload);
+        await updateEntryWithScope(user.uid, initialEntry, payload, effectiveScope, occurrenceDate ?? "");
       } else {
         await addDoc(collection(db, "users", user.uid, "entries"), {
           ...payload,
           completedDates: [],
+          excludedDates: [],
           createdAt: serverTimestamp(),
         });
       }
@@ -105,6 +144,11 @@ export default function EntryFormModal({
         <header className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-4">
           <h2 id="entry-form-title" className="text-base font-semibold text-gray-900">
             {isEdit ? "予定・タスクを編集" : "予定・タスクを追加"}
+            {isEdit && effectiveScope !== "all" && (
+              <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 align-middle text-[11px] font-semibold text-gray-500">
+                {effectiveScope === "single" ? "この日のみ" : "この日以降"}
+              </span>
+            )}
           </h2>
           <div className="flex items-center gap-1">
             <button
@@ -179,6 +223,43 @@ export default function EntryFormModal({
                 </div>
               </div>
             </div>
+
+            {effectiveScope !== "single" && (
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-gray-500">繰り返す曜日（任意）</label>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {WEEKDAY_OPTIONS.map(({ value, label }) => {
+                    const selected = weekdays.includes(value);
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() =>
+                          setWeekdays((current) =>
+                            current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
+                          )
+                        }
+                        aria-pressed={selected}
+                        className={`flex h-9 items-center justify-center rounded-lg border text-sm font-semibold transition-colors ${
+                          selected
+                            ? "border-black bg-black text-white"
+                            : `border-gray-200 hover:border-gray-300 ${
+                                value === 0 ? "text-rose-500" : value === 6 ? "text-blue-500" : "text-gray-500"
+                              }`
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-gray-400">
+                  {weekdays.length > 0
+                    ? "期間内の選択した曜日にだけ表示されます。終了日が空欄の場合は52週間繰り返します。"
+                    : "選択しない場合は、期間内の毎日に表示されます。"}
+                </p>
+              </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between">

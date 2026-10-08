@@ -1,6 +1,7 @@
 import type { DayEntry, EntryDoc, LinkItemType } from "./types";
-import { enumerateDateRange, type WeekDate } from "./week";
+import type { WeekDate } from "./week";
 import { getHolidayName } from "./holidays";
+import { listOccurrences, occursOn } from "./recurrence";
 
 export function detectLinkType(href: string): LinkItemType {
   return /maps\.(google|apple)\.com|goo\.gl\/maps/i.test(href) ? "map" : "url";
@@ -22,8 +23,7 @@ function bucketEntriesForDate(date: string, entries: EntryDoc[]): EntryBuckets {
   const buckets: EntryBuckets = { schedules: [], tasks: [], memos: [], links: [] };
 
   for (const entry of entries) {
-    const endDate = entry.endDate || entry.startDate;
-    if (date < entry.startDate || date > endDate) continue;
+    if (!occursOn(entry, date)) continue;
 
     if (entry.category === "schedule") {
       buckets.schedules.push(entry);
@@ -46,7 +46,7 @@ function bucketEntriesForDate(date: string, entries: EntryDoc[]): EntryBuckets {
 
 /**
  * ユーザーのフラットなエントリ一覧を、週の各曜日カード用の DayEntry[] に展開する。
- * 期間（startDate〜endDate）を持つエントリは、範囲内のすべての日のカードに現れる。
+ * 期間（startDate〜endDate）を持つエントリは、範囲内の該当日（曜日指定・除外日を考慮）のカードに現れる。
  */
 export function buildWeekEntries(weekDates: WeekDate[], entries: EntryDoc[]): DayEntry[] {
   return weekDates.map((wd) => ({
@@ -78,8 +78,7 @@ export function buildDayEntry(
 export function getDatesWithEntries(entries: EntryDoc[]): Set<string> {
   const dates = new Set<string>();
   for (const entry of entries) {
-    const endDate = entry.endDate || entry.startDate;
-    for (const date of enumerateDateRange(entry.startDate, endDate)) {
+    for (const date of listOccurrences(entry)) {
       dates.add(date);
     }
   }

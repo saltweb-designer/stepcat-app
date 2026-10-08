@@ -48,7 +48,7 @@ export default function TaskChecklist({ tasks, date }: { tasks: EntryDoc[]; date
                 {task.title}
               </span>
             </button>
-            <EntryActions entry={task} />
+            <EntryActions entry={task} date={date} />
           </li>
         );
       })}

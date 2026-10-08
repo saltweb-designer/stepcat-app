@@ -1,7 +1,7 @@
 import EntryActions from "@/components/entry-form/EntryActions";
 import type { EntryDoc } from "@/lib/types";
 
-export default function MemoList({ memos }: { memos: EntryDoc[] }) {
+export default function MemoList({ memos, date }: { memos: EntryDoc[]; date: string }) {
   if (memos.length === 0) {
     return <p className="text-sm text-gray-400">まだメモがありません</p>;
   }
@@ -16,7 +16,7 @@ export default function MemoList({ memos }: { memos: EntryDoc[] }) {
           <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-600">
             {memo.detail || memo.title}
           </p>
-          <EntryActions entry={memo} />
+          <EntryActions entry={memo} date={date} />
         </div>
       ))}
     </div>

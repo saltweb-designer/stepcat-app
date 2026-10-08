@@ -1,6 +1,7 @@
 import { CalendarRange, Clock } from "lucide-react";
 import type { EntryDoc } from "@/lib/types";
 import { formatPeriodLabel } from "@/lib/build-week-entries";
+import { formatWeekdaysLabel } from "@/lib/recurrence";
 import EntryActions from "@/components/entry-form/EntryActions";
 
 function formatTiming(entry: EntryDoc) {
@@ -8,8 +9,9 @@ function formatTiming(entry: EntryDoc) {
   return entry.endTime ? `${entry.startTime}〜${entry.endTime}` : entry.startTime;
 }
 
-export default function ScheduleBadge({ entry }: { entry: EntryDoc }) {
+export default function ScheduleBadge({ entry, date }: { entry: EntryDoc; date: string }) {
   const periodLabel = formatPeriodLabel(entry.startDate, entry.endDate);
+  const weekdaysLabel = formatWeekdaysLabel(entry.weekdays);
 
   return (
     <div className="flex items-start gap-2 rounded-xl bg-gray-100 px-3 py-2 text-gray-900">
@@ -22,12 +24,15 @@ export default function ScheduleBadge({ entry }: { entry: EntryDoc }) {
           {periodLabel && (
             <span className="rounded-full bg-gray-200 px-2 py-0.5 font-medium">{periodLabel}</span>
           )}
+          {weekdaysLabel && (
+            <span className="rounded-full bg-gray-200 px-2 py-0.5 font-medium">{weekdaysLabel}</span>
+          )}
           <span className="rounded-full bg-white px-2 py-0.5 font-medium ring-1 ring-inset ring-gray-300">
             {formatTiming(entry)}
           </span>
         </div>
       </div>
-      <EntryActions entry={entry} />
+      <EntryActions entry={entry} date={date} />
     </div>
   );
 }

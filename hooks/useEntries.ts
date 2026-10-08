@@ -41,6 +41,8 @@ export function useEntries(uid: string | undefined) {
               startTime: data.startTime ?? "",
               endTime: data.endTime ?? "",
               completedDates,
+              weekdays: Array.isArray(data.weekdays) ? data.weekdays : [],
+              excludedDates: Array.isArray(data.excludedDates) ? data.excludedDates : [],
             } satisfies EntryDoc;
           })
         );

@@ -18,6 +18,10 @@ export interface EntryDoc {
   endTime: string;
   /** category="task" の場合、完了した日付（YYYY-MM-DD）の一覧。日ごとに独立して完了状態を管理する */
   completedDates: string[];
+  /** 期間内で表示する曜日（0=日〜6=土）。空配列の場合は期間内の毎日 */
+  weekdays: number[];
+  /** シリーズから除外した日付（YYYY-MM-DD）。「この日のみ」の編集・削除で使用する */
+  excludedDates: string[];
 }
 
 export interface DayEntry {
@@ -125,8 +129,17 @@ export interface ExternalApp {
   id: string;
   name: string;
   description: string;
-  /** スマホ表示など、省スペース時に使う短縮ラベル */
-  shortLabel: string;
   href: string;
   iconSrc: string;
+}
+
+/** Firestore の users/{uid}/appLinks/{id} ドキュメントの形。ユーザーが自由に登録する関連アプリ */
+export interface AppLinkDoc {
+  id: string;
+  name: string;
+  href: string;
+  /** アイコン画像のURL。空文字の場合はサイトのファビコンを使う */
+  iconUrl: string;
+  /** 表示順（小さいほど先頭） */
+  order: number;
 }
