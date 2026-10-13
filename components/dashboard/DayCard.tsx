@@ -5,6 +5,7 @@ import TaskChecklist from "./TaskChecklist";
 import MemoList from "./MemoList";
 import LinkChips from "./LinkChips";
 import WellnessSection from "@/components/wellness/WellnessSection";
+import ActionLogSection from "@/components/action-log/ActionLogSection";
 
 function formatDate(dateStr: string) {
   const d = new Date(`${dateStr}T00:00:00`);
@@ -65,6 +66,8 @@ export default function DayCard({ entry }: { entry: DayEntry }) {
       <div className="mb-3">
         <TaskChecklist tasks={entry.tasks} date={entry.date} />
       </div>
+
+      <ActionLogSection date={entry.date} />
 
       <WellnessSection date={entry.date} />
 

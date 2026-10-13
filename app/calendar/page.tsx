@@ -7,11 +7,13 @@ import LoginPrompt from "@/components/auth/LoginPrompt";
 import ErrorBanner from "@/components/dashboard/ErrorBanner";
 import MonthGoalCard from "@/components/dashboard/MonthGoalCard";
 import WeeklyReviewAccordion from "@/components/dashboard/WeeklyReviewAccordion";
+import ActionBalanceCard from "@/components/action-log/ActionBalanceCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEntries } from "@/hooks/useEntries";
 import { getMonthGrid, toMonthKey, type MonthCell } from "@/lib/month";
 import { getDatesWithEntries } from "@/lib/build-week-entries";
 import { getHolidayName } from "@/lib/holidays";
+import { toIsoDate } from "@/lib/week";
 
 const WEEKDAY_HEADERS = ["月", "火", "水", "木", "金", "土", "日"];
 
@@ -33,6 +35,14 @@ export default function CalendarPage() {
   const [openWeekIndex, setOpenWeekIndex] = useState<number | null>(null);
 
   const viewMonthKey = useMemo(() => toMonthKey(viewYear, viewMonth), [viewYear, viewMonth]);
+  const monthPeriod = useMemo(
+    () => ({
+      label: `${viewMonth}月`,
+      startDate: toIsoDate(new Date(viewYear, viewMonth - 1, 1)),
+      endDate: toIsoDate(new Date(viewYear, viewMonth, 0)),
+    }),
+    [viewYear, viewMonth]
+  );
   const weeks = useMemo(() => getMonthGrid(viewYear, viewMonth, today), [viewYear, viewMonth, today]);
   const weeksInMonth = useMemo(() => weeks.filter((week) => week.some((cell) => cell.inCurrentMonth)), [weeks]);
   const datesWithEntries = useMemo(() => getDatesWithEntries(entries), [entries]);
@@ -87,6 +97,8 @@ export default function CalendarPage() {
             {error && <ErrorBanner message={error} />}
 
             <MonthGoalCard monthKey={viewMonthKey} monthLabel={`${viewYear}年${viewMonth}月`} />
+
+            <ActionBalanceCard periods={[monthPeriod]} />
 
             <section>
               <h2 className="mb-2 text-sm font-semibold text-gray-700">週間ごとの振り返り</h2>

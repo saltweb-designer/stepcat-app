@@ -11,6 +11,7 @@ import { getDayLabel, toIsoDate } from "@/lib/week";
 import { buildDayEntry, getDatesWithEntries } from "@/lib/build-week-entries";
 import DayCard from "./DayCard";
 import WeekSummaryCard from "./WeekSummaryCard";
+import ActionBalanceCard from "@/components/action-log/ActionBalanceCard";
 
 function formatRangeLabel(cells: MonthCell[]) {
   const format = (iso: string) => {
@@ -80,6 +81,11 @@ export default function WeeklyReviewAccordion({
               <Image src="/home_ai.png" alt="" fill sizes="96px" className="object-contain object-bottom" />
             </div>
           </div>
+          <ActionBalanceCard
+            periods={[
+              { label: "この週", startDate: cells[0].date, endDate: cells[cells.length - 1].date },
+            ]}
+          />
           {cellsInMonth.map((cell) => {
             const entry = buildDayEntry(cell.date, getDayLabel(cell.date), cell.date === todayIso, entries);
             return <DayCard key={cell.date} entry={entry} />;

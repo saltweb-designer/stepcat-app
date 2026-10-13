@@ -143,3 +143,20 @@ export interface AppLinkDoc {
   /** 表示順（小さいほど先頭） */
   order: number;
 }
+
+/** 行動の起点。自分起点＝自分がやりたい・進めたいこと、他人起点＝他者の要求による行動、不可避＝睡眠や通勤など避けられない行動 */
+export type ActionOrigin = "self" | "others" | "unavoidable";
+
+export interface ActionItem {
+  id: string;
+  text: string;
+}
+
+/** Firestore の users/{uid}/actionLogs/{date} ドキュメントの形（date = YYYY-MM-DD） */
+export interface ActionLogDoc {
+  /** 期間検索用に日付をフィールドとしても持つ */
+  date: string;
+  self: ActionItem[];
+  others: ActionItem[];
+  unavoidable: ActionItem[];
+}
