@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { Scale } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useActionLogRange } from "@/hooks/useActionLogRange";
-import { useActionLogSettings } from "@/hooks/useActionLogSettings";
-import { toIsoDate } from "@/lib/week";
-import { ACTION_ORIGINS, buildBalanceMessage, countActions } from "@/lib/action-log";
+import { useActionCounts } from "@/hooks/useActionCounts";
+import { ACTION_ORIGINS, buildBalanceMessage } from "@/lib/action-log";
 
 export interface BalancePeriod {
   label: string;
@@ -16,20 +14,22 @@ export interface BalancePeriod {
   endDate: string;
 }
 
-/** 期間内の「自分起点・他人起点・不可避」の件数を比較して表示する */
-export default function ActionBalanceCard({ periods }: { periods: BalancePeriod[] }) {
+/** 期間内の「自分起点・他人起点・不可避」の件数を比較して表示する。embedded の場合は他のカード内に置くため枠を付けない */
+export default function ActionBalanceCard({
+  periods,
+  embedded = false,
+}: {
+  periods: BalancePeriod[];
+  embedded?: boolean;
+}) {
   const { user } = useAuth();
   const [periodIndex, setPeriodIndex] = useState(0);
   const period = periods[periodIndex] ?? periods[0];
-  const { logs, loading: logsLoading, error } = useActionLogRange(user?.uid, period.startDate, period.endDate);
-  const { settings, loading: settingsLoading } = useActionLogSettings(user?.uid);
-  const loading = logsLoading || settingsLoading;
-
-  const counts = countActions(logs, settings, period.startDate, period.endDate, toIsoDate(new Date()));
+  const { counts, loading, error } = useActionCounts(user?.uid, period.startDate, period.endDate);
   const total = counts.self + counts.others + counts.unavoidable;
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
+    <section className={embedded ? "" : "rounded-2xl bg-white p-4 shadow-sm sm:p-5"}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
           <Scale className="h-4 w-4 text-gray-500" strokeWidth={2} />

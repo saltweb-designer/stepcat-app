@@ -1,36 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
 import Header from "@/components/layout/Header";
 import AppLinksSection from "@/components/dashboard/AppLinksSection";
 import DateStrip from "@/components/dashboard/DateStrip";
-import MonthGoalCard from "@/components/dashboard/MonthGoalCard";
+import MonthOverviewAccordion from "@/components/dashboard/MonthOverviewAccordion";
 import WeekTimeline from "@/components/dashboard/WeekTimeline";
 import AddEntryButton from "@/components/entry-form/AddEntryButton";
 import LoginPrompt from "@/components/auth/LoginPrompt";
-import ActionBalanceCard, { type BalancePeriod } from "@/components/action-log/ActionBalanceCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { toMonthKey } from "@/lib/month";
-import { getCurrentWeekDates, toIsoDate } from "@/lib/week";
 
 export default function Home() {
   const { user, loading } = useAuth();
-  const currentMonthKey = useMemo(() => {
-    const today = new Date();
-    return toMonthKey(today.getFullYear(), today.getMonth() + 1);
-  }, []);
-  const balancePeriods = useMemo<BalancePeriod[]>(() => {
-    const today = new Date();
-    const weekDates = getCurrentWeekDates(today);
-    return [
-      { label: "今週", startDate: weekDates[0].date, endDate: weekDates[weekDates.length - 1].date },
-      {
-        label: "今月",
-        startDate: toIsoDate(new Date(today.getFullYear(), today.getMonth(), 1)),
-        endDate: toIsoDate(new Date(today.getFullYear(), today.getMonth() + 1, 0)),
-      },
-    ];
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -43,8 +23,7 @@ export default function Home() {
         ) : user ? (
           <>
             <AppLinksSection />
-            <MonthGoalCard monthKey={currentMonthKey} monthLabel="今月" />
-            <ActionBalanceCard periods={balancePeriods} />
+            <MonthOverviewAccordion />
             <DateStrip />
             <WeekTimeline />
             <AddEntryButton />
