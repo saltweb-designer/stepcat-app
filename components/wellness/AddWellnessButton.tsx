@@ -18,7 +18,7 @@ export default function AddWellnessButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex flex-1 items-center justify-center gap-2 bg-rose-500 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-600"
+        className="flex flex-1 items-center justify-center gap-2 bg-rose-500 px-2 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-600"
       >
         <HeartPulse className="h-4 w-4 shrink-0" strokeWidth={2.5} />
         体調登録

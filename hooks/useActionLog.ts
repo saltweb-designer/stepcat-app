@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { arrayRemove, arrayUnion, doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { normalizeActionLogDoc } from "@/lib/action-log";
-import type { ActionItem, ActionLogDoc, ActionOrigin } from "@/lib/types";
+import { normalizeActionLogDoc, resolveActionItems } from "@/lib/action-log";
+import type { ActionItem, ActionLogDoc, ActionLogSettingsDoc, ActionOrigin } from "@/lib/types";
 
 /** 指定日の「自分起点・他人起点・不可避」リストを購読する */
-export function useActionLog(uid: string | undefined, date: string) {
+export function useActionLog(uid: string | undefined, date: string, settings: ActionLogSettingsDoc | null) {
   const [data, setData] = useState<ActionLogDoc | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,9 +34,26 @@ export function useActionLog(uid: string | undefined, date: string) {
     return unsubscribe;
   }, [uid, date]);
 
+  /** 「毎日の不可避」を使っている日は、その日の分として書き出してから変更する */
+  const writeItems = async (origin: ActionOrigin, items: ActionItem[]) => {
+    if (!uid) return;
+    await setDoc(
+      doc(db, "users", uid, "actionLogs", date),
+      { date, [origin]: items, updatedAt: serverTimestamp() },
+      { merge: true }
+    );
+  };
+
+  const currentItems = (origin: ActionOrigin) => resolveActionItems(data, origin, settings, date);
+
   const addItem = async (origin: ActionOrigin, text: string) => {
     if (!uid) return;
     const item: ActionItem = { id: crypto.randomUUID(), text };
+    const { items, isDaily } = currentItems(origin);
+    if (isDaily) {
+      await writeItems(origin, [...items, item]);
+      return;
+    }
     await setDoc(
       doc(db, "users", uid, "actionLogs", date),
       { date, [origin]: arrayUnion(item), updatedAt: serverTimestamp() },
@@ -45,13 +62,23 @@ export function useActionLog(uid: string | undefined, date: string) {
   };
 
   const updateItem = async (origin: ActionOrigin, id: string, text: string) => {
-    if (!uid || !data) return;
-    const next = data[origin].map((item) => (item.id === id ? { ...item, text } : item));
-    await updateDoc(doc(db, "users", uid, "actionLogs", date), { [origin]: next, updatedAt: serverTimestamp() });
+    const { items } = currentItems(origin);
+    await writeItems(
+      origin,
+      items.map((item) => (item.id === id ? { ...item, text } : item))
+    );
   };
 
   const removeItem = async (origin: ActionOrigin, item: ActionItem) => {
     if (!uid) return;
+    const { items, isDaily } = currentItems(origin);
+    if (isDaily) {
+      await writeItems(
+        origin,
+        items.filter((i) => i.id !== item.id)
+      );
+      return;
+    }
     await updateDoc(doc(db, "users", uid, "actionLogs", date), {
       [origin]: arrayRemove(item),
       updatedAt: serverTimestamp(),
@@ -60,5 +87,11 @@ export function useActionLog(uid: string | undefined, date: string) {
 
   return uid
     ? { data, error, addItem, updateItem, removeItem }
-    : { data: null, error: null, addItem: async () => {}, updateItem: async () => {}, removeItem: async () => {} };
+    : {
+        data: null,
+        error: null,
+        addItem: async () => {},
+        updateItem: async () => {},
+        removeItem: async () => {},
+      };
 }

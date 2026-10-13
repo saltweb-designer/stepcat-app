@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Repeat, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActionLog } from "@/hooks/useActionLog";
-import { ACTION_ORIGINS } from "@/lib/action-log";
+import { useActionLogSettings } from "@/hooks/useActionLogSettings";
+import { ACTION_ORIGINS, resolveActionItems } from "@/lib/action-log";
 import type { ActionItem, ActionOrigin } from "@/lib/types";
+import DailyUnavoidableEditor from "./DailyUnavoidableEditor";
 
 type Editing = { origin: ActionOrigin; id: string | null } | null;
 
@@ -69,8 +71,10 @@ function ItemInput({
 
 export default function ActionLogSection({ date }: { date: string }) {
   const { user } = useAuth();
-  const { data, error, addItem, updateItem, removeItem } = useActionLog(user?.uid, date);
+  const { settings, saveDailyUnavoidable } = useActionLogSettings(user?.uid);
+  const { data, error, addItem, updateItem, removeItem } = useActionLog(user?.uid, date, settings);
   const [editing, setEditing] = useState<Editing>(null);
+  const [editingDaily, setEditingDaily] = useState(false);
   /** 追加後に入力欄を空にして続けて入力できるよう、key を変えて再マウントする */
   const [addInputKey, setAddInputKey] = useState(0);
 
@@ -87,7 +91,7 @@ export default function ActionLogSection({ date }: { date: string }) {
     <div className="mb-3 flex flex-col gap-1.5">
       {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
       {ACTION_ORIGINS.map((origin) => {
-        const items = data?.[origin.key] ?? [];
+        const { items, isDaily } = resolveActionItems(data, origin.key, settings, date);
         const isAdding = editing?.origin === origin.key && editing.id === null;
         return (
           <div key={origin.key} className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
@@ -97,17 +101,37 @@ export default function ActionLogSection({ date }: { date: string }) {
                 {origin.label}
                 {items.length > 0 && <span className="font-semibold opacity-70">{items.length}</span>}
               </p>
-              {!isAdding && (
-                <button
-                  type="button"
-                  onClick={() => setEditing({ origin: origin.key, id: null })}
-                  className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
-                >
-                  <Plus className="h-3 w-3" strokeWidth={2.5} />
-                  追加
-                </button>
-              )}
+              <div className="flex items-center gap-0.5">
+                {origin.key === "unavoidable" && !editingDaily && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingDaily(true)}
+                    className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
+                  >
+                    <Repeat className="h-3 w-3" strokeWidth={2.5} />
+                    毎日の設定
+                  </button>
+                )}
+                {!isAdding && (
+                  <button
+                    type="button"
+                    onClick={() => setEditing({ origin: origin.key, id: null })}
+                    className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
+                  >
+                    <Plus className="h-3 w-3" strokeWidth={2.5} />
+                    追加
+                  </button>
+                )}
+              </div>
             </div>
+
+            {origin.key === "unavoidable" && editingDaily && (
+              <DailyUnavoidableEditor
+                initialItems={settings?.dailyUnavoidable ?? []}
+                onSave={saveDailyUnavoidable}
+                onClose={() => setEditingDaily(false)}
+              />
+            )}
 
             {items.length > 0 && (
               <ul className="mt-1.5 flex flex-col gap-1">
@@ -131,6 +155,11 @@ export default function ActionLogSection({ date }: { date: string }) {
                     >
                       <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-sm text-gray-700">
                         {item.text}
+                        {isDaily && (
+                          <span className="ml-1.5 inline-block rounded-full bg-slate-100 px-1.5 py-px align-middle text-[10px] font-semibold text-slate-500">
+                            毎日
+                          </span>
+                        )}
                       </p>
                       <button
                         type="button"

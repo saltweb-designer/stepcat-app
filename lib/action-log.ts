@@ -1,4 +1,5 @@
-import type { ActionItem, ActionLogDoc, ActionOrigin } from "./types";
+import type { ActionItem, ActionLogDoc, ActionLogSettingsDoc, ActionOrigin } from "./types";
+import { enumerateDateRange } from "./week";
 
 export const ACTION_ORIGINS: {
   key: ActionOrigin;
@@ -57,23 +58,63 @@ export function normalizeActionLogDoc(date: string, raw: Record<string, unknown>
     date,
     self: normalizeItems(raw.self),
     others: normalizeItems(raw.others),
-    unavoidable: normalizeItems(raw.unavoidable),
+    unavoidable: Array.isArray(raw.unavoidable) ? normalizeItems(raw.unavoidable) : null,
   };
+}
+
+/** 初めて使うときの「毎日の不可避」 */
+export const DEFAULT_DAILY_UNAVOIDABLE = ["睡眠", "洗濯", "料理"];
+
+export function normalizeActionLogSettings(raw: Record<string, unknown>): ActionLogSettingsDoc | null {
+  if (!Array.isArray(raw.dailyUnavoidable) || typeof raw.dailyUnavoidableSince !== "string") return null;
+  return {
+    dailyUnavoidable: raw.dailyUnavoidable.filter((text): text is string => typeof text === "string"),
+    dailyUnavoidableSince: raw.dailyUnavoidableSince,
+  };
+}
+
+/** 「毎日の不可避」から作る項目。id は日付内で一意になれば十分 */
+export function buildDailyUnavoidableItems(settings: ActionLogSettingsDoc | null, date: string): ActionItem[] {
+  if (!settings || date < settings.dailyUnavoidableSince) return [];
+  return settings.dailyUnavoidable.map((text, index) => ({ id: `daily-${index}`, text }));
+}
+
+/** その日に表示・集計する項目。不可避を個別に編集していない日は「毎日の不可避」を使う */
+export function resolveActionItems(
+  log: ActionLogDoc | null,
+  origin: ActionOrigin,
+  settings: ActionLogSettingsDoc | null,
+  date: string
+): { items: ActionItem[]; isDaily: boolean } {
+  if (origin !== "unavoidable") return { items: log?.[origin] ?? [], isDaily: false };
+  if (log?.unavoidable) return { items: log.unavoidable, isDaily: false };
+  return { items: buildDailyUnavoidableItems(settings, date), isDaily: true };
 }
 
 export type ActionCounts = Record<ActionOrigin, number>;
 
 export const EMPTY_ACTION_COUNTS: ActionCounts = { self: 0, others: 0, unavoidable: 0 };
 
-export function countActions(logs: ActionLogDoc[]): ActionCounts {
-  return logs.reduce<ActionCounts>(
-    (acc, log) => ({
-      self: acc.self + log.self.length,
-      others: acc.others + log.others.length,
-      unavoidable: acc.unavoidable + log.unavoidable.length,
-    }),
-    { ...EMPTY_ACTION_COUNTS }
-  );
+/**
+ * startDate〜endDate の件数を数える。「毎日の不可避」は今日までの日だけ数える（未来の日はまだ行動していないため）
+ */
+export function countActions(
+  logs: ActionLogDoc[],
+  settings: ActionLogSettingsDoc | null,
+  startDate: string,
+  endDate: string,
+  today: string
+): ActionCounts {
+  const logByDate = new Map(logs.map((log) => [log.date, log]));
+  const counts = { ...EMPTY_ACTION_COUNTS };
+  for (const date of enumerateDateRange(startDate, endDate)) {
+    const log = logByDate.get(date) ?? null;
+    counts.self += log?.self.length ?? 0;
+    counts.others += log?.others.length ?? 0;
+    if (log?.unavoidable) counts.unavoidable += log.unavoidable.length;
+    else if (date <= today) counts.unavoidable += buildDailyUnavoidableItems(settings, date).length;
+  }
+  return counts;
 }
 
 /** 自分起点と他人起点の比較から振り返りメッセージを作る */

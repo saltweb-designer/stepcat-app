@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Scale } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActionLogRange } from "@/hooks/useActionLogRange";
+import { useActionLogSettings } from "@/hooks/useActionLogSettings";
+import { toIsoDate } from "@/lib/week";
 import { ACTION_ORIGINS, buildBalanceMessage, countActions } from "@/lib/action-log";
 
 export interface BalancePeriod {
@@ -19,9 +21,11 @@ export default function ActionBalanceCard({ periods }: { periods: BalancePeriod[
   const { user } = useAuth();
   const [periodIndex, setPeriodIndex] = useState(0);
   const period = periods[periodIndex] ?? periods[0];
-  const { logs, loading, error } = useActionLogRange(user?.uid, period.startDate, period.endDate);
+  const { logs, loading: logsLoading, error } = useActionLogRange(user?.uid, period.startDate, period.endDate);
+  const { settings, loading: settingsLoading } = useActionLogSettings(user?.uid);
+  const loading = logsLoading || settingsLoading;
 
-  const counts = countActions(logs);
+  const counts = countActions(logs, settings, period.startDate, period.endDate, toIsoDate(new Date()));
   const total = counts.self + counts.others + counts.unavoidable;
 
   return (

@@ -158,5 +158,14 @@ export interface ActionLogDoc {
   date: string;
   self: ActionItem[];
   others: ActionItem[];
-  unavoidable: ActionItem[];
+  /** null の場合はその日を個別に編集しておらず、「毎日の不可避」設定を使う */
+  unavoidable: ActionItem[] | null;
+}
+
+/** Firestore の users/{uid}/settings/actionLog ドキュメントの形 */
+export interface ActionLogSettingsDoc {
+  /** 毎日の不可避として自動で入る項目 */
+  dailyUnavoidable: string[];
+  /** 毎日の不可避を適用し始めた日（YYYY-MM-DD）。これより前の日には適用しない */
+  dailyUnavoidableSince: string;
 }
