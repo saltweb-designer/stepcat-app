@@ -20,7 +20,7 @@ export default function AppIcon({
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   if (localIcon) {
-    return <Image src={iconSrc} alt="" fill sizes="(min-width: 640px) 44px, 72px" className="object-cover" />;
+    return <Image src={iconSrc} alt="" fill sizes="128px" className="object-cover" />;
   }
 
   const candidates = [iconSrc, getFaviconUrl(href)].filter(Boolean);
@@ -30,7 +30,7 @@ export default function AppIcon({
 
   if (!src) {
     return (
-      <span className="flex h-full w-full items-center justify-center bg-gray-800 text-xl font-bold text-white sm:text-base">
+      <span className="flex h-full w-full items-center justify-center bg-gray-800 text-xl font-bold text-white">
         {name.trim().charAt(0).toUpperCase() || "?"}
       </span>
     );
