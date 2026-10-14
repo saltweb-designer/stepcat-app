@@ -97,7 +97,7 @@ export default function ActionLogSection({ date }: { date: string }) {
         const { items, isDaily } = resolveActionItems(data, origin.key, settings, date);
         const isAdding = editing?.origin === origin.key && editing.id === null;
         return (
-          <div key={origin.key} className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
+          <div key={origin.key} data-keyboard-anchor className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
             <div className="flex items-center justify-between gap-2">
               <p className={`flex items-center gap-1.5 text-xs font-bold ${origin.textClass}`}>
                 <span className={`h-2 w-2 rounded-full ${origin.dotClass}`} />
