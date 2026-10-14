@@ -10,10 +10,10 @@ import { useAppLinks } from "@/hooks/useAppLinks";
 import { externalApps } from "@/lib/dummy-data";
 import type { AppLinkDoc } from "@/lib/types";
 
-/** 画面幅にかかわらずアイコンのみのタイルとして表示する。sm 以上はスマホと同じ大きさ（約60px）で左から並べる */
+/** 画面幅にかかわらずアイコンのみのタイルとして表示する。スマホは約44px、sm 以上は約60px で左から並べる */
 const tileClassName = "group relative block min-w-0";
 const iconFrameClassName =
-  "relative block aspect-square w-full overflow-hidden rounded-2xl bg-black shadow-sm transition-transform group-active:scale-95";
+  "relative block aspect-square w-full overflow-hidden rounded-xl bg-black shadow-sm transition-transform group-active:scale-95 sm:rounded-2xl";
 
 type FormState = { mode: "add" } | { mode: "edit"; app: AppLinkDoc } | null;
 
@@ -26,7 +26,7 @@ export default function AppLinksSection() {
 
   return (
     <section aria-labelledby="app-links-heading">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-1.5 flex items-center justify-between sm:mb-2">
         <h2 id="app-links-heading" className="text-sm font-semibold text-gray-700">
           関連アプリ
         </h2>
@@ -48,7 +48,7 @@ export default function AppLinksSection() {
         </div>
       )}
 
-      <div className="grid grid-cols-5 gap-3 sm:grid-cols-[repeat(auto-fill,3.75rem)]">
+      <div className="grid grid-cols-[repeat(auto-fill,2.75rem)] gap-2.5 sm:grid-cols-[repeat(auto-fill,3.75rem)] sm:gap-3">
         {externalApps.map((app) => (
           <a
             key={app.id}
@@ -77,7 +77,7 @@ export default function AppLinksSection() {
               <span className={`${iconFrameClassName} ring-2 ring-black/80 ring-offset-2 ring-offset-gray-100`}>
                 <AppIcon name={app.name} href={app.href} iconSrc={app.iconUrl} />
               </span>
-              <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-white text-gray-700 shadow ring-1 ring-gray-200">
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-gray-700 shadow ring-1 ring-gray-200">
                 <Pencil className="h-3 w-3" strokeWidth={2.5} />
               </span>
             </button>
@@ -103,9 +103,9 @@ export default function AppLinksSection() {
           onClick={() => setForm({ mode: "add" })}
           aria-label="関連アプリを追加"
           title="関連アプリを追加"
-          className="group flex aspect-square w-full items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 text-gray-400 transition-colors hover:border-gray-400 hover:text-gray-600"
+          className="group flex aspect-square w-full items-center justify-center rounded-xl border-2 border-dashed border-gray-300 text-gray-400 transition-colors hover:border-gray-400 hover:text-gray-600 sm:rounded-2xl"
         >
-          <Plus className="h-5 w-5" strokeWidth={2.5} />
+          <Plus className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
         </button>
       </div>
 

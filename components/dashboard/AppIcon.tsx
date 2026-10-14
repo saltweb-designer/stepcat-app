@@ -30,7 +30,7 @@ export default function AppIcon({
 
   if (!src) {
     return (
-      <span className="flex h-full w-full items-center justify-center bg-gray-800 text-xl font-bold text-white">
+      <span className="flex h-full w-full items-center justify-center bg-gray-800 text-base font-bold sm:text-xl text-white">
         {name.trim().charAt(0).toUpperCase() || "?"}
       </span>
     );
