@@ -240,13 +240,13 @@ export default function ActionLogSection({
         >
           {editing.id === null ? (
             <ItemInput
-              key={addInputKey}
               initialText=""
               placeholder={sheetOrigin.placeholder}
               keepVisible={false}
               onSubmit={async (text) => {
+                // 入力カードは1件保存したら閉じる。続けて追加するときは「追加」ボタンから開き直す
                 await addItem(sheetOrigin.key, text);
-                setAddInputKey((k) => k + 1);
+                setEditing(null);
               }}
               onCancel={() => setEditing(null)}
             />
