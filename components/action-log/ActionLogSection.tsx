@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Pencil, Plus, Repeat, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActionLog } from "@/hooks/useActionLog";
 import { useActionLogSettings } from "@/hooks/useActionLogSettings";
+import { useScrollIntoViewOnKeyboard } from "@/hooks/useScrollIntoViewOnKeyboard";
 import { ACTION_ORIGINS, resolveActionItems } from "@/lib/action-log";
 import type { ActionItem, ActionOrigin } from "@/lib/types";
 import DailyUnavoidableEditor from "./DailyUnavoidableEditor";
@@ -24,6 +25,8 @@ function ItemInput({
 }) {
   const [text, setText] = useState(initialText);
   const [saving, setSaving] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  useScrollIntoViewOnKeyboard(formRef);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -39,7 +42,7 @@ function ItemInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-1.5">
+    <form ref={formRef} onSubmit={handleSubmit} className="flex items-center gap-1.5">
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
