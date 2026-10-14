@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { useVisualViewport } from "@/hooks/useVisualViewport";
 import ActionLogSection from "./ActionLogSection";
 
 /** 指定日の「行動の起点」リストをモーダルで編集する。項目は追加・編集のたびに保存される */
@@ -9,20 +9,7 @@ export default function ActionLogModal({ date, onClose }: { date: string; onClos
   const [, m, d] = date.split("-");
   const dateLabel = `${Number(m)}月${Number(d)}日`;
   /** スマホでキーボードが開いたとき、モーダルをキーボードの上の見えている領域に収める */
-  const [viewport, setViewport] = useState<{ top: number; height: number } | null>(null);
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => setViewport({ top: vv.offsetTop, height: vv.height });
-    update();
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
-    };
-  }, []);
+  const viewport = useVisualViewport();
 
   return (
     <div
@@ -52,7 +39,7 @@ export default function ActionLogModal({ date, onClose }: { date: string; onClos
         </header>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          <ActionLogSection date={date} />
+          <ActionLogSection date={date} inputPlacement="inline" />
         </div>
       </div>
     </div>

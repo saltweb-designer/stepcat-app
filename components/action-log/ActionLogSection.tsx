@@ -8,25 +8,34 @@ import { useActionLogSettings } from "@/hooks/useActionLogSettings";
 import { useScrollIntoViewOnKeyboard } from "@/hooks/useScrollIntoViewOnKeyboard";
 import { ACTION_ORIGINS, resolveActionItems } from "@/lib/action-log";
 import type { ActionItem, ActionOrigin } from "@/lib/types";
+import ActionItemSheet from "./ActionItemSheet";
 import DailyUnavoidableEditor from "./DailyUnavoidableEditor";
 
-type Editing = { origin: ActionOrigin; id: string | null } | null;
+/** sheet: スマホでは入力カードを画面中央に出す(その場の入力欄だとキーボードに隠れやすいため) */
+type Editing = { origin: ActionOrigin; id: string | null; sheet: boolean } | null;
+
+function isTouchDevice() {
+  return window.matchMedia("(pointer: coarse)").matches;
+}
 
 function ItemInput({
   initialText,
   placeholder,
   onSubmit,
   onCancel,
+  keepVisible = true,
 }: {
   initialText: string;
   placeholder: string;
   onSubmit: (text: string) => Promise<void>;
   onCancel: () => void;
+  /** 入力欄が画面外やキーボードの裏なら、ページをスクロールして見える位置に出す */
+  keepVisible?: boolean;
 }) {
   const [text, setText] = useState(initialText);
   const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
-  useScrollIntoViewOnKeyboard(formRef);
+  useScrollIntoViewOnKeyboard(formRef, keepVisible);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -72,7 +81,14 @@ function ItemInput({
   );
 }
 
-export default function ActionLogSection({ date }: { date: string }) {
+export default function ActionLogSection({
+  date,
+  inputPlacement = "auto",
+}: {
+  date: string;
+  /** auto: スマホでは入力カード、PC ではその場で入力。inline: 常にその場で入力(モーダル内など) */
+  inputPlacement?: "auto" | "inline";
+}) {
   const { user } = useAuth();
   const { settings, saveDailyUnavoidable } = useActionLogSettings(user?.uid);
   const { data, error, addItem, updateItem, removeItem } = useActionLog(user?.uid, date, settings);
@@ -80,6 +96,16 @@ export default function ActionLogSection({ date }: { date: string }) {
   const [editingDaily, setEditingDaily] = useState(false);
   /** 追加後に入力欄を空にして続けて入力できるよう、key を変えて再マウントする */
   const [addInputKey, setAddInputKey] = useState(0);
+
+  const startEditing = (origin: ActionOrigin, id: string | null) => {
+    setEditing({ origin, id, sheet: inputPlacement === "auto" && isTouchDevice() });
+  };
+
+  const sheetOrigin = editing?.sheet ? ACTION_ORIGINS.find((o) => o.key === editing.origin) : undefined;
+  const sheetItem =
+    editing?.sheet && editing.id !== null && sheetOrigin
+      ? resolveActionItems(data, sheetOrigin.key, settings, date).items.find((item) => item.id === editing.id)
+      : undefined;
 
   const handleRemove = async (origin: ActionOrigin, item: ActionItem) => {
     if (!window.confirm(`「${item.text}」を削除してもよろしいですか？`)) return;
@@ -96,8 +122,9 @@ export default function ActionLogSection({ date }: { date: string }) {
       {ACTION_ORIGINS.map((origin) => {
         const { items, isDaily } = resolveActionItems(data, origin.key, settings, date);
         const isAdding = editing?.origin === origin.key && editing.id === null;
+        const isAddingInline = isAdding && !editing.sheet;
         return (
-          <div key={origin.key} data-keyboard-anchor className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
+          <div key={origin.key} className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
             <div className="flex items-center justify-between gap-2">
               <p className={`flex items-center gap-1.5 text-xs font-bold ${origin.textClass}`}>
                 <span className={`h-2 w-2 rounded-full ${origin.dotClass}`} />
@@ -118,7 +145,7 @@ export default function ActionLogSection({ date }: { date: string }) {
                 {!isAdding && (
                   <button
                     type="button"
-                    onClick={() => setEditing({ origin: origin.key, id: null })}
+                    onClick={() => startEditing(origin.key, null)}
                     className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
                   >
                     <Plus className="h-3 w-3" strokeWidth={2.5} />
@@ -139,7 +166,7 @@ export default function ActionLogSection({ date }: { date: string }) {
             {items.length > 0 && (
               <ul className="mt-1.5 flex flex-col gap-1">
                 {items.map((item) =>
-                  editing?.origin === origin.key && editing.id === item.id ? (
+                  !editing?.sheet && editing?.origin === origin.key && editing.id === item.id ? (
                     <li key={item.id}>
                       <ItemInput
                         initialText={item.text}
@@ -166,7 +193,7 @@ export default function ActionLogSection({ date }: { date: string }) {
                       </p>
                       <button
                         type="button"
-                        onClick={() => setEditing({ origin: origin.key, id: item.id })}
+                        onClick={() => startEditing(origin.key, item.id)}
                         aria-label="編集"
                         className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
                       >
@@ -186,7 +213,7 @@ export default function ActionLogSection({ date }: { date: string }) {
               </ul>
             )}
 
-            {isAdding && (
+            {isAddingInline && (
               <div className="mt-1.5">
                 <ItemInput
                   key={addInputKey}
@@ -203,6 +230,40 @@ export default function ActionLogSection({ date }: { date: string }) {
           </div>
         );
       })}
+
+      {sheetOrigin && editing && (editing.id === null || sheetItem) && (
+        <ActionItemSheet
+          title={`${sheetOrigin.label}を${editing.id === null ? "追加" : "編集"}`}
+          dotClass={sheetOrigin.dotClass}
+          textClass={sheetOrigin.textClass}
+          onClose={() => setEditing(null)}
+        >
+          {editing.id === null ? (
+            <ItemInput
+              key={addInputKey}
+              initialText=""
+              placeholder={sheetOrigin.placeholder}
+              keepVisible={false}
+              onSubmit={async (text) => {
+                await addItem(sheetOrigin.key, text);
+                setAddInputKey((k) => k + 1);
+              }}
+              onCancel={() => setEditing(null)}
+            />
+          ) : (
+            <ItemInput
+              initialText={sheetItem?.text ?? ""}
+              placeholder={sheetOrigin.placeholder}
+              keepVisible={false}
+              onSubmit={async (text) => {
+                await updateItem(sheetOrigin.key, editing.id!, text);
+                setEditing(null);
+              }}
+              onCancel={() => setEditing(null)}
+            />
+          )}
+        </ActionItemSheet>
+      )}
     </div>
   );
 }
