@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Pencil, Plus } from "lucide-react";
+import Link from "next/link";
+import { Check, MonitorPlay, Pencil, Plus } from "lucide-react";
 import AppIcon from "./AppIcon";
 import AppLinkFormModal from "./AppLinkFormModal";
 import ErrorBanner from "./ErrorBanner";
@@ -49,6 +50,17 @@ export default function AppLinksSection() {
       )}
 
       <div className="grid grid-cols-[repeat(auto-fill,2.75rem)] gap-2.5 sm:grid-cols-[repeat(auto-fill,3.75rem)] sm:gap-3">
+        <Link
+          href="/videos"
+          title="動画"
+          aria-label="動画"
+          className={`${tileClassName} ${isEditing ? "opacity-40" : ""}`}
+        >
+          <span className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-red-600 shadow-sm transition-transform group-active:scale-95 sm:rounded-2xl">
+            <MonitorPlay className="h-5 w-5 text-white sm:h-7 sm:w-7" strokeWidth={2} />
+          </span>
+        </Link>
+
         {externalApps.map((app) => (
           <a
             key={app.id}

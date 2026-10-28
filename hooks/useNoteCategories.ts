@@ -15,7 +15,11 @@ import {
 import { db } from "@/lib/firebase";
 import type { NoteCategoryDoc } from "@/lib/types";
 
-export function useNoteCategories(uid: string | undefined) {
+/** カテゴリ一覧の購読と編集。ノート（noteCategories）と動画（videoCategories）で共通のコレクション形式を使う */
+export function useNoteCategories(
+  uid: string | undefined,
+  collectionName: "noteCategories" | "videoCategories" = "noteCategories"
+) {
   const [categories, setCategories] = useState<NoteCategoryDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +27,7 @@ export function useNoteCategories(uid: string | undefined) {
   useEffect(() => {
     if (!uid) return;
 
-    const q = query(collection(db, "users", uid, "noteCategories"), orderBy("order", "asc"));
+    const q = query(collection(db, "users", uid, collectionName), orderBy("order", "asc"));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -52,14 +56,14 @@ export function useNoteCategories(uid: string | undefined) {
     );
 
     return unsubscribe;
-  }, [uid]);
+  }, [uid, collectionName]);
 
   const addCategory = async (name: string) => {
     if (!uid) return;
     const trimmed = name.trim();
     if (!trimmed) return;
     const nextOrder = categories.reduce((max, c) => Math.max(max, c.order), -1) + 1;
-    await addDoc(collection(db, "users", uid, "noteCategories"), {
+    await addDoc(collection(db, "users", uid, collectionName), {
       name: trimmed,
       order: nextOrder,
       createdAt: serverTimestamp(),
@@ -70,12 +74,12 @@ export function useNoteCategories(uid: string | undefined) {
     if (!uid) return;
     const trimmed = name.trim();
     if (!trimmed) return;
-    await updateDoc(doc(db, "users", uid, "noteCategories", id), { name: trimmed });
+    await updateDoc(doc(db, "users", uid, collectionName, id), { name: trimmed });
   };
 
   const deleteCategory = async (id: string) => {
     if (!uid) return;
-    await deleteDoc(doc(db, "users", uid, "noteCategories", id));
+    await deleteDoc(doc(db, "users", uid, collectionName, id));
   };
 
   return uid

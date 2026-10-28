@@ -6,10 +6,12 @@ import type { NoteCategoryDoc } from "@/lib/types";
 
 function CategoryRow({
   category,
+  itemLabel,
   onRename,
   onDelete,
 }: {
   category: NoteCategoryDoc;
+  itemLabel: string;
   onRename: (name: string) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
@@ -33,7 +35,7 @@ function CategoryRow({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`「${category.name}」を削除しますか？このカテゴリのノートは未分類になります。`)) return;
+    if (!window.confirm(`「${category.name}」を削除しますか？このカテゴリの${itemLabel}は未分類になります。`)) return;
     setDeleting(true);
     try {
       await onDelete();
@@ -105,12 +107,15 @@ function CategoryRow({
 
 export default function NoteCategoryModal({
   categories,
+  itemLabel = "ノート",
   onAdd,
   onRename,
   onDelete,
   onClose,
 }: {
   categories: NoteCategoryDoc[];
+  /** 削除確認メッセージに使う、カテゴリに属するものの呼び名 */
+  itemLabel?: string;
   onAdd: (name: string) => Promise<void>;
   onRename: (id: string, name: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -177,6 +182,7 @@ export default function NoteCategoryModal({
               <CategoryRow
                 key={category.id}
                 category={category}
+                itemLabel={itemLabel}
                 onRename={(name) => onRename(category.id, name)}
                 onDelete={() => onDelete(category.id)}
               />

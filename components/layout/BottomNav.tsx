@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Home, NotebookPen } from "lucide-react";
+import { CalendarDays, Home, MonitorPlay, NotebookPen } from "lucide-react";
 
 const tabs = [
   { href: "/", label: "ホーム", icon: Home },
+  { href: "/videos", label: "動画", icon: MonitorPlay },
   { href: "/calendar", label: "カレンダー", icon: CalendarDays },
   { href: "/notes", label: "ノート", icon: NotebookPen },
 ];

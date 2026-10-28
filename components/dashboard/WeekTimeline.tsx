@@ -27,8 +27,8 @@ export default function WeekTimeline() {
 
   return (
     <section aria-labelledby="week-timeline-heading">
-      <div className="relative mb-4 overflow-hidden rounded-2xl bg-gray-800 p-4 text-white shadow-sm sm:p-5">
-        <div className="relative z-10 pr-16 sm:pr-20">
+      <div className="relative mb-3 overflow-hidden rounded-2xl bg-gray-800 px-4 py-3 text-white shadow-sm sm:px-5 sm:py-4">
+        <div className="relative z-10 pr-14 sm:pr-20">
           <div className="flex items-end justify-between gap-2">
             <h2 id="week-timeline-heading" className="text-sm font-bold text-white">
               今週のタイムライン
@@ -36,10 +36,10 @@ export default function WeekTimeline() {
             <span className="text-xs font-semibold text-white/60">{periodLabel}</span>
           </div>
 
-          {weekDates.length > 0 && <WeekSummaryCard weekStartDate={weekDates[0].date} />}
+          {weekDates.length > 0 && <WeekSummaryCard weekStartDate={weekDates[0].date} compact />}
         </div>
 
-        <div className="pointer-events-none absolute -bottom-2 -right-2 h-16 w-20 sm:h-20 sm:w-24">
+        <div className="pointer-events-none absolute -bottom-2 -right-2 h-14 w-16 sm:h-20 sm:w-24">
           <Image src="/home_ai.png" alt="" fill sizes="96px" className="object-contain object-bottom" />
         </div>
       </div>

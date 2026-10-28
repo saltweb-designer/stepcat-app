@@ -169,3 +169,22 @@ export interface ActionLogSettingsDoc {
   /** 毎日の不可避を適用し始めた日（YYYY-MM-DD）。これより前の日には適用しない */
   dailyUnavoidableSince: string;
 }
+
+/** Firestore の users/{uid}/videos/{id} ドキュメントの形。動画ページに登録した YouTube 動画 */
+export interface VideoDoc {
+  id: string;
+  url: string;
+  /** 動画タイトル（URL から自動取得） */
+  title: string;
+  /** YouTube のチャンネル（アカウント）名。URL から自動取得し、手動で修正もできる */
+  channelName: string;
+  /** チャンネルページの URL。チャンネル一覧で同じアカウントをまとめるキーに使う */
+  channelUrl: string;
+  /** チャンネルのアイコン画像 URL。取得できなかった場合は空文字 */
+  channelIconUrl: string;
+  /** users/{uid}/videoCategories/{id} への参照。空文字、または削除済みカテゴリを指す場合は未分類として扱う */
+  categoryId: string;
+  memo: string;
+}
+
+export type VideoInput = Omit<VideoDoc, "id">;
