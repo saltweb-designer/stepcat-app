@@ -20,7 +20,7 @@ export default function ChannelStrip({
   onSelect: (key: string | null) => void;
 }) {
   return (
-    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
       {channels.map((channel) => {
         const active = selected === channel.key;
         return (
