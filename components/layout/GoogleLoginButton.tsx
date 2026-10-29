@@ -81,7 +81,7 @@ export default function GoogleLoginButton() {
     <button
       type="button"
       onClick={handleSignIn}
-      className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 active:bg-gray-100"
+      className="flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-2.5 py-1.5 text-sm sm:gap-2 sm:px-3.5 sm:py-2 font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 active:bg-gray-100"
     >
       <GoogleIcon />
       <span className="hidden sm:inline">Googleでログイン</span>

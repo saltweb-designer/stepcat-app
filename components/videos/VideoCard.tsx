@@ -17,6 +17,7 @@ export default function VideoCard({
   onSave,
   onDelete,
   onManageCategories,
+  itemLabel = "動画",
 }: {
   video: VideoDoc;
   categoryName: string;
@@ -24,6 +25,8 @@ export default function VideoCard({
   onSave: (input: VideoInput) => Promise<void>;
   onDelete: () => Promise<void>;
   onManageCategories: () => void;
+  /** 削除確認メッセージに使う呼び名（動画・音楽） */
+  itemLabel?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -31,7 +34,7 @@ export default function VideoCard({
 
   const handleDelete = async () => {
     if (deleting) return;
-    if (!window.confirm("この動画を削除してもよろしいですか？")) return;
+    if (!window.confirm(`この${itemLabel}を削除してもよろしいですか？`)) return;
     setDeleting(true);
     try {
       await onDelete();

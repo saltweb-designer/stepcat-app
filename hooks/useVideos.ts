@@ -15,7 +15,10 @@ import {
 import { db } from "@/lib/firebase";
 import type { VideoDoc, VideoInput } from "@/lib/types";
 
-export function useVideos(uid: string | undefined) {
+/** 動画ページは videos、音楽ページは music に保存し、互いに混ざらないようにする */
+export type MediaCollection = "videos" | "music";
+
+export function useVideos(uid: string | undefined, collectionName: MediaCollection = "videos") {
   const [videos, setVideos] = useState<VideoDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +26,7 @@ export function useVideos(uid: string | undefined) {
   useEffect(() => {
     if (!uid) return;
 
-    const q = query(collection(db, "users", uid, "videos"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "users", uid, collectionName), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -57,11 +60,11 @@ export function useVideos(uid: string | undefined) {
     );
 
     return unsubscribe;
-  }, [uid]);
+  }, [uid, collectionName]);
 
   const addVideo = async (input: VideoInput) => {
     if (!uid) return;
-    await addDoc(collection(db, "users", uid, "videos"), {
+    await addDoc(collection(db, "users", uid, collectionName), {
       ...input,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -70,7 +73,7 @@ export function useVideos(uid: string | undefined) {
 
   const updateVideo = async (id: string, input: VideoInput) => {
     if (!uid) return;
-    await updateDoc(doc(db, "users", uid, "videos", id), {
+    await updateDoc(doc(db, "users", uid, collectionName, id), {
       ...input,
       updatedAt: serverTimestamp(),
     });
@@ -78,7 +81,7 @@ export function useVideos(uid: string | undefined) {
 
   const deleteVideo = async (id: string) => {
     if (!uid) return;
-    await deleteDoc(doc(db, "users", uid, "videos", id));
+    await deleteDoc(doc(db, "users", uid, collectionName, id));
   };
 
   return uid
