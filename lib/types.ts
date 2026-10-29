@@ -180,6 +180,8 @@ export interface ActionLogSettingsDoc {
   dailyUnavoidable: string[];
   /** 毎日の不可避を適用し始めた日（YYYY-MM-DD）。これより前の日には適用しない */
   dailyUnavoidableSince: string;
+  /** 自分起点を追加するときに選べる、よく使う項目 */
+  selfPresets: string[];
 }
 
 /** Firestore の users/{uid}/videos/{id} ドキュメントの形。動画ページに登録した YouTube 動画 */

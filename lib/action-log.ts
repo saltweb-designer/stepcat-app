@@ -65,11 +65,17 @@ export function normalizeActionLogDoc(date: string, raw: Record<string, unknown>
 /** 初めて使うときの「毎日の不可避」 */
 export const DEFAULT_DAILY_UNAVOIDABLE = ["睡眠", "洗濯", "料理"];
 
+/** 「よく使う自分起点」を一度も編集していないときの項目 */
+export const DEFAULT_SELF_PRESETS = ["アプリ開発", "English diary", "筋トレ", "散歩", "休息の決断"];
+
 export function normalizeActionLogSettings(raw: Record<string, unknown>): ActionLogSettingsDoc | null {
   if (!Array.isArray(raw.dailyUnavoidable) || typeof raw.dailyUnavoidableSince !== "string") return null;
   return {
     dailyUnavoidable: raw.dailyUnavoidable.filter((text): text is string => typeof text === "string"),
     dailyUnavoidableSince: raw.dailyUnavoidableSince,
+    selfPresets: Array.isArray(raw.selfPresets)
+      ? raw.selfPresets.filter((text): text is string => typeof text === "string")
+      : DEFAULT_SELF_PRESETS,
   };
 }
 

@@ -52,7 +52,16 @@ export function useActionLogSettings(uid: string | undefined) {
     );
   };
 
+  const saveSelfPresets = async (items: string[]) => {
+    if (!uid) return;
+    await setDoc(
+      doc(db, "users", uid, "settings", "actionLog"),
+      { selfPresets: items, updatedAt: serverTimestamp() },
+      { merge: true }
+    );
+  };
+
   return uid
-    ? { settings, loading, saveDailyUnavoidable }
-    : { settings: null, loading: false, saveDailyUnavoidable: async () => {} };
+    ? { settings, loading, saveDailyUnavoidable, saveSelfPresets }
+    : { settings: null, loading: false, saveDailyUnavoidable: async () => {}, saveSelfPresets: async () => {} };
 }
