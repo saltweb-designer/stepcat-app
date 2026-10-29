@@ -9,6 +9,7 @@ import NoteCategoryFilter, { ALL_CATEGORIES } from "@/components/notes/NoteCateg
 import NoteCategoryModal from "@/components/notes/NoteCategoryModal";
 import ChannelStrip, { type ChannelSummary } from "@/components/videos/ChannelStrip";
 import NewVideoCard from "@/components/videos/NewVideoCard";
+import NowPlayingButton from "@/components/videos/NowPlayingButton";
 import VideoCard from "@/components/videos/VideoCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNoteCategories } from "@/hooks/useNoteCategories";
@@ -76,6 +77,8 @@ export default function MediaLibraryPage({
   const [newItemOpen, setNewItemOpen] = useState(false);
   // シャッフルボタンを押したときの並び順の種。押すまでは null で、日替わりの順番を使う
   const [manualShuffleSeed, setManualShuffleSeed] = useState<string | null>(null);
+  // 最後に再生を始めた動画。画面外へスクロールしたときに戻るボタンを出す
+  const [playingId, setPlayingId] = useState<string | null>(null);
 
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -124,6 +127,10 @@ export default function MediaLibraryPage({
     else if (shuffleDaily && isAllView) ordered = shuffleByDay(matched, todayKey);
     return ordered.sort((a, b) => Number(b.pinned) - Number(a.pinned));
   }, [videos, selectedCategory, activeChannel, searchQuery, categoryNameById, shuffleDaily, todayKey, manualShuffleSeed]);
+
+  // 絞り込みでカードが消えると埋め込みも外れて再生が止まるので、戻る先もなくす
+  const playingVideo = playingId ? filteredVideos.find((video) => video.id === playingId) : undefined;
+  if (playingId && !playingVideo) setPlayingId(null);
 
   const newVideoCategoryId = selectedCategory === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedCategory;
   const isFiltering = selectedCategory !== ALL_CATEGORIES || activeChannel !== null || searchQuery.trim() !== "";
@@ -222,6 +229,7 @@ export default function MediaLibraryPage({
                     onDelete={() => deleteVideo(video.id)}
                     onTogglePin={() => setVideoPinned(video.id, !video.pinned)}
                     onManageCategories={() => setCategoryModalOpen(true)}
+                    onPlay={() => setPlayingId(video.id)}
                     itemLabel={title}
                   />
                 ))}
@@ -232,6 +240,8 @@ export default function MediaLibraryPage({
           <LoginPrompt />
         )}
       </main>
+
+      {playingVideo && <NowPlayingButton video={playingVideo} />}
 
       {categoryModalOpen && (
         <NoteCategoryModal

@@ -18,6 +18,7 @@ export default function VideoCard({
   onDelete,
   onTogglePin,
   onManageCategories,
+  onPlay,
   itemLabel = "動画",
 }: {
   video: VideoDoc;
@@ -27,6 +28,8 @@ export default function VideoCard({
   onDelete: () => Promise<void>;
   onTogglePin: () => Promise<void>;
   onManageCategories: () => void;
+  /** サムネイルを押して再生を始めたとき */
+  onPlay?: () => void;
   /** 削除確認メッセージに使う呼び名（動画・音楽） */
   itemLabel?: string;
 }) {
@@ -60,8 +63,8 @@ export default function VideoCard({
   };
 
   return (
-    <div className="flex min-w-0 flex-col rounded-2xl border border-gray-200/70 bg-white p-3 shadow-sm sm:p-4">
-      {embed && <YouTubeEmbed video={embed} />}
+    <div data-video-id={video.id} className="flex min-w-0 scroll-my-20 flex-col rounded-2xl border border-gray-200/70 bg-white p-3 shadow-sm sm:p-4">
+      {embed && <YouTubeEmbed video={embed} onPlay={onPlay} />}
 
       <div className="mt-2.5 flex items-start gap-2.5">
         <ChannelAvatar name={video.channelName} iconUrl={video.channelIconUrl} className="mt-0.5 h-8 w-8" />

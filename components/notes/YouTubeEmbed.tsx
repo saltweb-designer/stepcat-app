@@ -6,7 +6,7 @@ import { Play } from "lucide-react";
 import type { YouTubeVideo } from "@/lib/youtube";
 
 /** サムネイルを表示し、タップするとその場で動画を埋め込み再生する */
-export default function YouTubeEmbed({ video }: { video: YouTubeVideo }) {
+export default function YouTubeEmbed({ video, onPlay }: { video: YouTubeVideo; onPlay?: () => void }) {
   const [playing, setPlaying] = useState(false);
   const params = new URLSearchParams({ autoplay: "1", playsinline: "1", rel: "0" });
   if (video.start > 0) params.set("start", String(video.start));
@@ -28,6 +28,7 @@ export default function YouTubeEmbed({ video }: { video: YouTubeVideo }) {
           onClick={(e) => {
             e.stopPropagation();
             setPlaying(true);
+            onPlay?.();
           }}
           className="group absolute inset-0 h-full w-full"
           aria-label="YouTube 動画を再生"
