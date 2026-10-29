@@ -48,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       */}
       <body className="flex h-dvh flex-col overflow-hidden bg-gray-100">
         <AuthProvider>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
+          <div data-scroll-root className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
           <AppChrome />
         </AuthProvider>
       </body>

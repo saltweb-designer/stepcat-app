@@ -27,11 +27,10 @@ export default function BottomNav() {
           <Link
             key={href}
             href={href}
-            className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-semibold transition-colors ${
-              isActive ? "text-black" : "text-gray-400 hover:text-gray-600"
-            }`}
+            className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-normal text-gray-400 transition-colors hover:text-gray-600"
           >
-            <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
+            {/* 選択中はアイコンだけを赤にし、文字はグレーのままにして圧迫感を抑える */}
+            <Icon className={`h-5 w-5 ${isActive ? "text-red-500" : ""}`} strokeWidth={isActive ? 2.5 : 2} />
             {label}
           </Link>
         );

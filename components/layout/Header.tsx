@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 import GoogleLoginButton from "./GoogleLoginButton";
 import HeaderNavIcons from "./HeaderNavIcons";
+import LogoLink from "./LogoLink";
 
 /** 猫 / StepCat / 動画 / 音楽 / アカウント の順に、どの幅でも1行に収める */
 export default function Header() {
@@ -11,7 +11,7 @@ export default function Header() {
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
-        <Link href="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
+        <LogoLink className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
           <Image
             src="/logo_stepcat_icon.png"
             alt="StepCat"
@@ -21,7 +21,7 @@ export default function Header() {
             priority
           />
           <p className="truncate text-sm font-semibold text-gray-900">StepCat</p>
-        </Link>
+        </LogoLink>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <HeaderNavIcons />
           <GoogleLoginButton />
