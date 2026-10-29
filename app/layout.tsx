@@ -41,9 +41,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/*
+        ページ全体(window)をスクロールさせると、iPad・iPhoneのSafariがツールバーを出し入れする際に
+        固定表示のヘッダー・フッターが上下にずれて画面外へめり込むことがある。
+        画面の高さに固定した枠の中だけをスクロールさせ、フッターは枠の下に普通に並べる
+      */}
+      <body className="flex h-dvh flex-col overflow-hidden bg-gray-100">
         <AuthProvider>
-          {children}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
           <AppChrome />
         </AuthProvider>
       </body>
