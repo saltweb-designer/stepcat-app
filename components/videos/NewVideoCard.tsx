@@ -1,23 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { useMemo } from "react";
 import InlineAccordion from "@/components/notes/InlineAccordion";
 import VideoInlineForm from "./VideoInlineForm";
 import type { NoteCategoryDoc, VideoInput } from "@/lib/types";
 
+/**
+ * 新規登録のフォーム。開閉ボタンはページ見出しの横にあり、開いている間だけカードとして展開する
+ */
 export default function NewVideoCard({
+  open,
+  onClose,
   categories,
   initialCategoryId,
   onCreate,
   onManageCategories,
 }: {
+  open: boolean;
+  onClose: () => void;
   categories: NoteCategoryDoc[];
   initialCategoryId: string;
   onCreate: (input: VideoInput) => Promise<void>;
   onManageCategories: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const initialVideo = useMemo<VideoInput>(
     () => ({ url: "", title: "", channelName: "", channelUrl: "", channelIconUrl: "", categoryId: initialCategoryId, memo: "" }),
     [initialCategoryId]
@@ -25,34 +30,25 @@ export default function NewVideoCard({
 
   const handleSave = async (input: VideoInput) => {
     await onCreate(input);
-    setOpen(false);
+    onClose();
   };
 
+  // 閉じている間は高さ0になるので、親の gap 分の余白も打ち消して詰める
   return (
-    <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-4 shadow-sm">
-      {open ? (
-        <p className="text-xs font-semibold text-gray-500">新規登録</p>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="flex w-full items-center justify-center gap-1.5 py-1 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-800"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} />
-          新規登録
-        </button>
-      )}
-
+    <div className={`transition-[margin] duration-300 ease-in-out ${open ? "" : "-mt-3"}`}>
       <InlineAccordion open={open}>
-        <VideoInlineForm
-          active={open}
-          initialVideo={initialVideo}
-          categories={categories}
-          onSave={handleSave}
-          onCancel={() => setOpen(false)}
-          onManageCategories={onManageCategories}
-          submitLabel="追加"
-        />
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-4">
+          <p className="text-xs font-semibold text-gray-500">新規登録</p>
+          <VideoInlineForm
+            active={open}
+            initialVideo={initialVideo}
+            categories={categories}
+            onSave={handleSave}
+            onCancel={onClose}
+            onManageCategories={onManageCategories}
+            submitLabel="追加"
+          />
+        </div>
       </InlineAccordion>
     </div>
   );

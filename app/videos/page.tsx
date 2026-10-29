@@ -5,6 +5,6 @@ import MediaLibraryPage from "@/components/videos/MediaLibraryPage";
 
 export default function VideosPage() {
   return (
-    <MediaLibraryPage title="動画" icon={MonitorPlay} itemsCollection="videos" categoriesCollection="videoCategories" />
+    <MediaLibraryPage title="動画" icon={MonitorPlay} itemsCollection="videos" categoriesCollection="videoCategories" shuffleDaily />
   );
 }

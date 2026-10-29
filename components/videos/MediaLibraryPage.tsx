@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, X, type LucideIcon } from "lucide-react";
+import { Plus, Search, X, type LucideIcon } from "lucide-react";
 import Header from "@/components/layout/Header";
 import LoginPrompt from "@/components/auth/LoginPrompt";
 import ErrorBanner from "@/components/dashboard/ErrorBanner";
@@ -15,10 +15,30 @@ import { useNoteCategories } from "@/hooks/useNoteCategories";
 import { useVideos, type MediaCollection } from "@/hooks/useVideos";
 import { UNCATEGORIZED_ID } from "@/lib/notes";
 import type { VideoDoc } from "@/lib/types";
+import { toIsoDate } from "@/lib/week";
 
 /** 同じチャンネルの動画をまとめるキー。チャンネルURLが無ければ名前で代用する */
 function channelKeyOf(video: VideoDoc) {
   return video.channelUrl || video.channelName.trim();
+}
+
+/** 文字列から 32bit の数値を作る（FNV-1a）。同じ文字列なら常に同じ値になる */
+function hashString(text: string) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+/**
+ * 日付と動画IDから並び順を決めるシャッフル。同じ日なら開き直しても・別の端末でも同じ順番で、
+ * 日付が変わると順番が入れ替わる。動画を追加・削除しても他の動画同士の順番は変わらない
+ */
+function shuffleByDay(videos: VideoDoc[], dayKey: string) {
+  const keyById = new Map(videos.map((video) => [video.id, hashString(`${dayKey}:${video.id}`)]));
+  return [...videos].sort((a, b) => keyById.get(a.id)! - keyById.get(b.id)!);
 }
 
 /**
@@ -30,11 +50,14 @@ export default function MediaLibraryPage({
   icon: Icon,
   itemsCollection,
   categoriesCollection,
+  shuffleDaily = false,
 }: {
   title: string;
   icon: LucideIcon;
   itemsCollection: MediaCollection;
   categoriesCollection: "videoCategories" | "musicCategories" | "trainingVideoCategories";
+  /** 「すべて」表示（絞り込み・検索なし）のとき、1日ごとに並び順をシャッフルする */
+  shuffleDaily?: boolean;
 }) {
   const { user, loading } = useAuth();
   const { videos, error: videosError, addVideo, updateVideo, setVideoPinned, deleteVideo } = useVideos(user?.uid, itemsCollection);
@@ -50,6 +73,7 @@ export default function MediaLibraryPage({
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [newItemOpen, setNewItemOpen] = useState(false);
 
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -72,7 +96,10 @@ export default function MediaLibraryPage({
 
   const activeChannel = selectedChannel && channels.some((c) => c.key === selectedChannel) ? selectedChannel : null;
 
-  // ピン留めした動画を先頭に固定し、それぞれの中では新しい順を保つ（sort は安定ソート）
+  const todayKey = toIsoDate(new Date());
+
+  // ピン留めした動画を先頭に固定し、それぞれの中では新しい順を保つ（sort は安定ソート）。
+  // shuffleDaily のときは「すべて」表示に限り、ピン留め以外を日替わりの順番にする
   const filteredVideos = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const matched = videos.filter((video) => {
@@ -88,8 +115,10 @@ export default function MediaLibraryPage({
         .toLowerCase();
       return haystack.includes(q);
     });
-    return matched.sort((a, b) => Number(b.pinned) - Number(a.pinned));
-  }, [videos, selectedCategory, activeChannel, searchQuery, categoryNameById]);
+    const isAllView = selectedCategory === ALL_CATEGORIES && !activeChannel && !q;
+    const ordered = shuffleDaily && isAllView ? shuffleByDay(matched, todayKey) : matched;
+    return ordered.sort((a, b) => Number(b.pinned) - Number(a.pinned));
+  }, [videos, selectedCategory, activeChannel, searchQuery, categoryNameById, shuffleDaily, todayKey]);
 
   const newVideoCategoryId = selectedCategory === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedCategory;
   const isFiltering = selectedCategory !== ALL_CATEGORIES || activeChannel !== null || searchQuery.trim() !== "";
@@ -106,11 +135,20 @@ export default function MediaLibraryPage({
           <>
             {(videosError || categoriesError) && <ErrorBanner message={videosError ?? categoriesError ?? ""} />}
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-2">
               <h2 className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-gray-700">
                 <Icon className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
                 {title}
               </h2>
+              <button
+                type="button"
+                onClick={() => setNewItemOpen((open) => !open)}
+                className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-white shadow-sm transition-colors hover:bg-gray-700"
+                aria-label={newItemOpen ? "新規登録を閉じる" : "新規登録"}
+                aria-expanded={newItemOpen}
+              >
+                {newItemOpen ? <X className="h-4 w-4" strokeWidth={2.5} /> : <Plus className="h-4 w-4" strokeWidth={2.5} />}
+              </button>
               <div className="relative w-full max-w-[60%]">
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" strokeWidth={2} />
                 <input
@@ -145,6 +183,8 @@ export default function MediaLibraryPage({
             />
 
             <NewVideoCard
+              open={newItemOpen}
+              onClose={() => setNewItemOpen(false)}
               categories={categories}
               initialCategoryId={newVideoCategoryId}
               onCreate={addVideo}
