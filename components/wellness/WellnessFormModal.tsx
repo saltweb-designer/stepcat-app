@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { EMPTY_WELLNESS, type WaterLogEntry, type WellnessDoc } from "@/lib/types";
 
 const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
@@ -262,34 +262,46 @@ export default function WellnessFormModal({
             <div>
               <span className="mb-1.5 block text-xs font-semibold text-gray-500">睡眠時間</span>
               <div className="flex items-center gap-2">
-                <select
-                  aria-label="睡眠時間（時間）"
-                  value={form.sleepHours.hours}
-                  onChange={(e) =>
-                    update("sleepHours", { ...form.sleepHours, hours: Number(e.target.value) })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
-                >
-                  {HOUR_OPTIONS.map((h) => (
-                    <option key={h} value={h}>
-                      {h}時間
-                    </option>
-                  ))}
-                </select>
-                <select
-                  aria-label="睡眠時間（分）"
-                  value={form.sleepHours.minutes}
-                  onChange={(e) =>
-                    update("sleepHours", { ...form.sleepHours, minutes: Number(e.target.value) })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
-                >
-                  {MINUTE_OPTIONS.map((m) => (
-                    <option key={m} value={m}>
-                      {m}分
-                    </option>
-                  ))}
-                </select>
+                <div className="relative w-full">
+                  <select
+                    aria-label="睡眠時間（時間）"
+                    value={form.sleepHours.hours}
+                    onChange={(e) =>
+                      update("sleepHours", { ...form.sleepHours, hours: Number(e.target.value) })
+                    }
+                    className="w-full appearance-none rounded-lg border border-gray-300 bg-white py-2 pr-9 pl-3 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  >
+                    {HOUR_OPTIONS.map((h) => (
+                      <option key={h} value={h}>
+                        {h}時間
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-500"
+                    strokeWidth={2}
+                  />
+                </div>
+                <div className="relative w-full">
+                  <select
+                    aria-label="睡眠時間（分）"
+                    value={form.sleepHours.minutes}
+                    onChange={(e) =>
+                      update("sleepHours", { ...form.sleepHours, minutes: Number(e.target.value) })
+                    }
+                    className="w-full appearance-none rounded-lg border border-gray-300 bg-white py-2 pr-9 pl-3 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-black/20"
+                  >
+                    {MINUTE_OPTIONS.map((m) => (
+                      <option key={m} value={m}>
+                        {m}分
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-500"
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
 
