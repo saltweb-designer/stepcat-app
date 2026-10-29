@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Shuffle, X, type LucideIcon } from "lucide-react";
 import Header from "@/components/layout/Header";
 import LoginPrompt from "@/components/auth/LoginPrompt";
@@ -16,6 +16,7 @@ import { useNoteCategories } from "@/hooks/useNoteCategories";
 import { useVideos, type MediaCollection } from "@/hooks/useVideos";
 import { UNCATEGORIZED_ID } from "@/lib/notes";
 import type { VideoDoc } from "@/lib/types";
+import { PLAYER_STATE, readPlayerState, sendPlayerCommand } from "@/lib/youtube-player";
 import { toIsoDate } from "@/lib/week";
 
 /** 同じチャンネルの動画をまとめるキー。チャンネルURLが無ければ名前で代用する */
@@ -40,6 +41,11 @@ function hashString(text: string) {
 function shuffleByDay(videos: VideoDoc[], dayKey: string) {
   const keyById = new Map(videos.map((video) => [video.id, hashString(`${dayKey}:${video.id}`)]));
   return [...videos].sort((a, b) => keyById.get(a.id)! - keyById.get(b.id)!);
+}
+
+/** 一覧の中の埋め込みプレーヤー（再生を始めた動画だけ iframe がある） */
+function findPlayerIframe(videoId: string) {
+  return document.querySelector<HTMLIFrameElement>(`[data-video-id="${videoId}"] iframe`);
 }
 
 /**
@@ -77,8 +83,38 @@ export default function MediaLibraryPage({
   const [newItemOpen, setNewItemOpen] = useState(false);
   // シャッフルボタンを押したときの並び順の種。押すまでは null で、日替わりの順番を使う
   const [manualShuffleSeed, setManualShuffleSeed] = useState<string | null>(null);
-  // 最後に再生を始めた動画。画面外へスクロールしたときに戻るボタンを出す
-  const [playingId, setPlayingId] = useState<string | null>(null);
+  // 最後に再生を始めた動画と、一時停止中かどうか。画面右下に戻るボタンと再生/一時停止ボタンを出す
+  const [nowPlaying, setNowPlaying] = useState<{ id: string; paused: boolean } | null>(null);
+
+  // 埋め込みプレーヤーから届く再生状態を受け取る。動画を直接タップして再生・停止した場合もここで分かる。
+  // 別の動画が再生を始めたら、それまで再生していた動画は一時停止して、同時に鳴らないようにする
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const state = readPlayerState(event);
+      if (state === null) return;
+      const iframes = [...document.querySelectorAll<HTMLIFrameElement>("[data-video-id] iframe")];
+      const source = iframes.find((iframe) => iframe.contentWindow === event.source);
+      const id = source?.closest<HTMLElement>("[data-video-id]")?.dataset.videoId;
+      if (!source || !id) return;
+      if (state === PLAYER_STATE.PLAYING) {
+        for (const iframe of iframes) if (iframe !== source) sendPlayerCommand(iframe, "pauseVideo");
+        setNowPlaying({ id, paused: false });
+      } else if (state === PLAYER_STATE.PAUSED || state === PLAYER_STATE.ENDED) {
+        setNowPlaying((current) => (current?.id === id ? { id, paused: true } : current));
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  const togglePlayback = () => {
+    if (!nowPlaying) return;
+    const iframe = findPlayerIframe(nowPlaying.id);
+    if (!iframe) return;
+    sendPlayerCommand(iframe, nowPlaying.paused ? "playVideo" : "pauseVideo");
+    // プレーヤーからの返事を待たずに見た目を切り替え、押した手応えをすぐ返す
+    setNowPlaying({ id: nowPlaying.id, paused: !nowPlaying.paused });
+  };
 
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -129,8 +165,8 @@ export default function MediaLibraryPage({
   }, [videos, selectedCategory, activeChannel, searchQuery, categoryNameById, shuffleDaily, todayKey, manualShuffleSeed]);
 
   // 絞り込みでカードが消えると埋め込みも外れて再生が止まるので、戻る先もなくす
-  const playingVideo = playingId ? filteredVideos.find((video) => video.id === playingId) : undefined;
-  if (playingId && !playingVideo) setPlayingId(null);
+  const playingVideo = nowPlaying ? filteredVideos.find((video) => video.id === nowPlaying.id) : undefined;
+  if (nowPlaying && !playingVideo) setNowPlaying(null);
 
   const newVideoCategoryId = selectedCategory === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedCategory;
   const isFiltering = selectedCategory !== ALL_CATEGORIES || activeChannel !== null || searchQuery.trim() !== "";
@@ -229,7 +265,7 @@ export default function MediaLibraryPage({
                     onDelete={() => deleteVideo(video.id)}
                     onTogglePin={() => setVideoPinned(video.id, !video.pinned)}
                     onManageCategories={() => setCategoryModalOpen(true)}
-                    onPlay={() => setPlayingId(video.id)}
+                    onPlay={() => setNowPlaying({ id: video.id, paused: false })}
                     itemLabel={title}
                   />
                 ))}
@@ -241,7 +277,9 @@ export default function MediaLibraryPage({
         )}
       </main>
 
-      {playingVideo && <NowPlayingButton video={playingVideo} />}
+      {playingVideo && nowPlaying && (
+        <NowPlayingButton video={playingVideo} paused={nowPlaying.paused} onTogglePlayback={togglePlayback} />
+      )}
 
       {categoryModalOpen && (
         <NoteCategoryModal
