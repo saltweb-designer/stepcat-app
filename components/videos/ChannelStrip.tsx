@@ -30,7 +30,7 @@ export default function ChannelStrip({
   const hiddenCount = channels.length - MOBILE_VISIBLE_COUNT;
 
   return (
-    <div className="-mx-4 flex flex-wrap gap-x-3 gap-y-2 px-4 py-1 [scrollbar-width:none] sm:-mx-6 sm:flex-nowrap sm:gap-3 sm:overflow-x-auto sm:px-6 [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
       {channels.map((channel, index) => {
         const active = selected === channel.key;
         const hiddenOnMobile = !showAll && index >= MOBILE_VISIBLE_COUNT;
