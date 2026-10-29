@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Dumbbell, Home, MonitorPlay, NotebookPen } from "lucide-react";
+import { CalendarDays, Dumbbell, Home, MonitorPlay, Music, NotebookPen } from "lucide-react";
 
 const tabs = [
   { href: "/", label: "ホーム", icon: Home },
+  { href: "/music", label: "音楽", icon: Music },
   { href: "/videos", label: "動画", icon: MonitorPlay },
-  { href: "/training", label: "トレーニング", icon: Dumbbell },
-  { href: "/calendar", label: "カレンダー", icon: CalendarDays },
-  { href: "/notes", label: "ノート", icon: NotebookPen },
+  { href: "/training", label: "筋トレ", icon: Dumbbell },
+  { href: "/calendar", label: "予定", icon: CalendarDays },
+  { href: "/notes", label: "メモ", icon: NotebookPen },
 ];
 
 export default function BottomNav() {
