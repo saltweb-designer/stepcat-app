@@ -23,11 +23,11 @@ export default function ActionItemSheet({
 }) {
   const viewport = useVisualViewport();
 
-  // 日付カードの transform / backdrop-filter の影響で fixed がずれないよう、body 直下に描画する
+  // 日付カードの transform / backdrop-filter の影響で fixed がずれないよう、body 直下に描画する。
+  // 背景のグレーは画面全体に敷き（キーボード上のアドレスバー周りに隙間を作らない）、カードだけを見えている範囲の中央に置く
   return createPortal(
     <div
-      style={viewport ? { top: viewport.top, height: viewport.height, bottom: "auto" } : undefined}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+      className="fixed inset-0 z-50 bg-black/30"
       onClick={(e) => {
         // ポータルでも React のイベントは日付カードへ伝わるため、ここで止める
         e.stopPropagation();
@@ -35,17 +35,22 @@ export default function ActionItemSheet({
       }}
     >
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl bg-white p-4 shadow-2xl"
+        style={viewport ? { top: viewport.top, height: viewport.height, bottom: "auto" } : undefined}
+        className="absolute inset-0 flex items-center justify-center px-4"
       >
-        <p className={`mb-2.5 flex items-center gap-1.5 text-sm font-bold ${textClass}`}>
-          <span className={`h-2 w-2 rounded-full ${dotClass}`} />
-          {title}
-        </p>
-        {children}
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md rounded-2xl bg-white p-4 shadow-2xl"
+        >
+          <p className={`mb-2.5 flex items-center gap-1.5 text-sm font-bold ${textClass}`}>
+            <span className={`h-2 w-2 rounded-full ${dotClass}`} />
+            {title}
+          </p>
+          {children}
+        </div>
       </div>
     </div>,
     document.body
