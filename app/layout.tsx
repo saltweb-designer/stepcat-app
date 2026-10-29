@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { MediaPlayerProvider } from "@/contexts/MediaPlayerContext";
 import AppChrome from "@/components/layout/AppChrome";
+import PersistentPlayer from "@/components/videos/PersistentPlayer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -48,8 +50,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       */}
       <body className="flex h-dvh flex-col overflow-hidden bg-gray-100">
         <AuthProvider>
-          <div data-scroll-root className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
-          <AppChrome />
+          {/* 動画・音楽・筋トレのプレーヤーはページの外に置き、別のページへ移動しても再生を続ける */}
+          <MediaPlayerProvider>
+            <div data-scroll-root className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
+            <PersistentPlayer />
+            <AppChrome />
+          </MediaPlayerProvider>
         </AuthProvider>
       </body>
     </html>

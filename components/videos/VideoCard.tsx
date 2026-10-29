@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Pencil, Pin, Trash2 } from "lucide-react";
 import InlineAccordion from "@/components/notes/InlineAccordion";
 import NoteText from "@/components/notes/NoteText";
-import YouTubeEmbed from "@/components/notes/YouTubeEmbed";
 import ChannelAvatar from "./ChannelAvatar";
+import PlayerSlot from "./PlayerSlot";
 import VideoInlineForm from "./VideoInlineForm";
 import { parseYouTubeUrl } from "@/lib/youtube";
 import type { NoteCategoryDoc, VideoDoc, VideoInput } from "@/lib/types";
@@ -18,7 +18,6 @@ export default function VideoCard({
   onDelete,
   onTogglePin,
   onManageCategories,
-  onPlay,
   itemLabel = "動画",
 }: {
   video: VideoDoc;
@@ -28,8 +27,6 @@ export default function VideoCard({
   onDelete: () => Promise<void>;
   onTogglePin: () => Promise<void>;
   onManageCategories: () => void;
-  /** サムネイルを押して再生を始めたとき */
-  onPlay?: () => void;
   /** 削除確認メッセージに使う呼び名（動画・音楽） */
   itemLabel?: string;
 }) {
@@ -64,7 +61,7 @@ export default function VideoCard({
 
   return (
     <div data-video-id={video.id} className="flex min-w-0 scroll-my-20 flex-col rounded-2xl border border-gray-200/70 bg-white p-3 shadow-sm sm:p-4">
-      {embed && <YouTubeEmbed video={embed} onPlay={onPlay} />}
+      {embed && <PlayerSlot item={video} embed={embed} />}
 
       <div className="mt-2.5 flex items-start gap-2.5">
         <ChannelAvatar name={video.channelName} iconUrl={video.channelIconUrl} className="mt-0.5 h-8 w-8" />
