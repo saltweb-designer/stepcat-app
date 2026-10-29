@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AppChrome from "@/components/layout/AppChrome";
@@ -25,6 +25,14 @@ export const metadata: Metadata = {
     shortcut: [{ url: `/favicon.png?v=${FAVICON_VERSION}`, type: "image/png" }],
     apple: [{ url: `/apple-icon.png?v=${FAVICON_VERSION}`, type: "image/png" }],
   },
+};
+
+// iPad・iPhoneのSafariでは画面の端までページが描かれるため、cover指定でセーフエリアの値（env(safe-area-inset-*)）を受け取り、
+// ヘッダー・フッター側でその分の余白を取る。指定しないと値が0になり、フッターがホームバーの裏にめり込む
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
