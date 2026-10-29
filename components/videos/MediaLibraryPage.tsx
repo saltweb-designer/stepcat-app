@@ -34,7 +34,7 @@ export default function MediaLibraryPage({
   title: string;
   icon: LucideIcon;
   itemsCollection: MediaCollection;
-  categoriesCollection: "videoCategories" | "musicCategories";
+  categoriesCollection: "videoCategories" | "musicCategories" | "trainingVideoCategories";
 }) {
   const { user, loading } = useAuth();
   const { videos, error: videosError, addVideo, updateVideo, setVideoPinned, deleteVideo } = useVideos(user?.uid, itemsCollection);

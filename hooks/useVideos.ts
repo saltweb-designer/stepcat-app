@@ -15,8 +15,8 @@ import {
 import { db } from "@/lib/firebase";
 import type { VideoDoc, VideoInput } from "@/lib/types";
 
-/** 動画ページは videos、音楽ページは music に保存し、互いに混ざらないようにする */
-export type MediaCollection = "videos" | "music";
+/** 動画ページは videos、音楽ページは music、トレーニング動画ページは trainingVideos に保存し、互いに混ざらないようにする */
+export type MediaCollection = "videos" | "music" | "trainingVideos";
 
 export function useVideos(uid: string | undefined, collectionName: MediaCollection = "videos") {
   const [videos, setVideos] = useState<VideoDoc[]>([]);

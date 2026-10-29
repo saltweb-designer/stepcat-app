@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MonitorPlay, Music } from "lucide-react";
+import { Dumbbell, MonitorPlay, Music } from "lucide-react";
 
 const links = [
   { href: "/videos", label: "動画", icon: MonitorPlay },
   { href: "/music", label: "音楽", icon: Music },
+  { href: "/training", label: "トレーニング動画", icon: Dumbbell },
 ];
 
-/** ヘッダー右側の動画・音楽ページへのアイコンリンク。文字は出さずアイコンだけにする */
+/** ヘッダー右側の動画・音楽・トレーニング動画ページへのアイコンリンク。文字は出さずアイコンだけにする */
 export default function HeaderNavIcons() {
   const pathname = usePathname();
 

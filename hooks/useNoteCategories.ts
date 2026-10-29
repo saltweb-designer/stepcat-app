@@ -15,10 +15,10 @@ import {
 import { db } from "@/lib/firebase";
 import type { NoteCategoryDoc } from "@/lib/types";
 
-/** カテゴリ一覧の購読と編集。ノート（noteCategories）・動画（videoCategories）・音楽（musicCategories）で共通のコレクション形式を使う */
+/** カテゴリ一覧の購読と編集。ノート（noteCategories）・動画（videoCategories）・音楽（musicCategories）・トレーニング動画（trainingVideoCategories）で共通のコレクション形式を使う */
 export function useNoteCategories(
   uid: string | undefined,
-  collectionName: "noteCategories" | "videoCategories" | "musicCategories" = "noteCategories"
+  collectionName: "noteCategories" | "videoCategories" | "musicCategories" | "trainingVideoCategories" = "noteCategories"
 ) {
   const [categories, setCategories] = useState<NoteCategoryDoc[]>([]);
   const [loading, setLoading] = useState(true);
