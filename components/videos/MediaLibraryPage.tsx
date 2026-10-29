@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Search, X, type LucideIcon } from "lucide-react";
+import { Plus, Search, Shuffle, X, type LucideIcon } from "lucide-react";
 import Header from "@/components/layout/Header";
 import LoginPrompt from "@/components/auth/LoginPrompt";
 import ErrorBanner from "@/components/dashboard/ErrorBanner";
@@ -56,7 +56,7 @@ export default function MediaLibraryPage({
   icon: LucideIcon;
   itemsCollection: MediaCollection;
   categoriesCollection: "videoCategories" | "musicCategories" | "trainingVideoCategories";
-  /** 「すべて」表示（絞り込み・検索なし）のとき、1日ごとに並び順をシャッフルする */
+  /** 「すべて」表示（絞り込み・検索なし）のとき1日ごとに並び順をシャッフルし、手動のシャッフルボタンも出す */
   shuffleDaily?: boolean;
 }) {
   const { user, loading } = useAuth();
@@ -74,6 +74,8 @@ export default function MediaLibraryPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [newItemOpen, setNewItemOpen] = useState(false);
+  // シャッフルボタンを押したときの並び順の種。押すまでは null で、日替わりの順番を使う
+  const [manualShuffleSeed, setManualShuffleSeed] = useState<string | null>(null);
 
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -99,7 +101,8 @@ export default function MediaLibraryPage({
   const todayKey = toIsoDate(new Date());
 
   // ピン留めした動画を先頭に固定し、それぞれの中では新しい順を保つ（sort は安定ソート）。
-  // shuffleDaily のときは「すべて」表示に限り、ピン留め以外を日替わりの順番にする
+  // shuffleDaily のときは「すべて」表示に限り、ピン留め以外を日替わりの順番にする。
+  // シャッフルボタンを押した後は、表示中の一覧をその押した回ごとの順番にする
   const filteredVideos = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const matched = videos.filter((video) => {
@@ -116,9 +119,11 @@ export default function MediaLibraryPage({
       return haystack.includes(q);
     });
     const isAllView = selectedCategory === ALL_CATEGORIES && !activeChannel && !q;
-    const ordered = shuffleDaily && isAllView ? shuffleByDay(matched, todayKey) : matched;
+    let ordered = matched;
+    if (shuffleDaily && manualShuffleSeed) ordered = shuffleByDay(matched, manualShuffleSeed);
+    else if (shuffleDaily && isAllView) ordered = shuffleByDay(matched, todayKey);
     return ordered.sort((a, b) => Number(b.pinned) - Number(a.pinned));
-  }, [videos, selectedCategory, activeChannel, searchQuery, categoryNameById, shuffleDaily, todayKey]);
+  }, [videos, selectedCategory, activeChannel, searchQuery, categoryNameById, shuffleDaily, todayKey, manualShuffleSeed]);
 
   const newVideoCategoryId = selectedCategory === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedCategory;
   const isFiltering = selectedCategory !== ALL_CATEGORIES || activeChannel !== null || searchQuery.trim() !== "";
@@ -140,10 +145,20 @@ export default function MediaLibraryPage({
                 <Icon className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
                 {title}
               </h2>
+              {shuffleDaily && (
+                <button
+                  type="button"
+                  onClick={() => setManualShuffleSeed(String(Math.random()))}
+                  className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-gray-500 shadow-sm transition-colors hover:text-gray-800"
+                  aria-label="並び順をシャッフル"
+                >
+                  <Shuffle className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setNewItemOpen((open) => !open)}
-                className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-white shadow-sm transition-colors hover:bg-gray-700"
+                className={`${shuffleDaily ? "" : "ml-auto "}flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-white shadow-sm transition-colors hover:bg-gray-700`}
                 aria-label={newItemOpen ? "新規登録を閉じる" : "新規登録"}
                 aria-expanded={newItemOpen}
               >
