@@ -207,13 +207,13 @@ export default function MediaLibraryPage({
               >
                 {newItemOpen ? <X className="h-4 w-4" strokeWidth={2.5} /> : <Plus className="h-4 w-4" strokeWidth={2.5} />}
               </button>
-              <div className="relative w-full max-w-[60%]">
+              <div className="relative w-full max-w-[45%] sm:max-w-[14rem]">
                 <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" strokeWidth={2} />
                 <input
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="タイトル・アカウント名で検索"
+                  placeholder="検索"
                   className="w-full rounded-full bg-white py-1.5 pl-7 pr-7 text-base text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-black/20 sm:text-xs [&::-webkit-search-cancel-button]:hidden"
                 />
                 {searchQuery && (

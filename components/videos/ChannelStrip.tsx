@@ -30,14 +30,14 @@ export default function ChannelStrip({
             onClick={() => onSelect(active ? null : channel.key)}
             aria-pressed={active}
             title={channel.name}
-            className={`flex w-14 shrink-0 flex-col items-center gap-1 transition-opacity sm:w-16 ${
+            className={`flex w-[3.25rem] shrink-0 flex-col items-center gap-1 transition-opacity sm:w-[3.75rem] ${
               selected && !active ? "opacity-40 hover:opacity-70" : ""
             }`}
           >
             <ChannelAvatar
               name={channel.name}
               iconUrl={channel.iconUrl}
-              className={`h-12 w-12 sm:h-14 sm:w-14 ${active ? "ring-2 ring-black ring-offset-2 ring-offset-gray-100" : ""}`}
+              className={`h-10 w-10 sm:h-12 sm:w-12 ${active ? "ring-2 ring-black ring-offset-2 ring-offset-gray-100" : ""}`}
             />
             <span className={`w-full truncate text-center text-[10px] ${active ? "font-bold text-gray-900" : "font-medium text-gray-600"}`}>
               {channel.name}
@@ -49,7 +49,7 @@ export default function ChannelStrip({
         <button
           type="button"
           onClick={() => onSelect(null)}
-          className="flex h-12 shrink-0 items-center px-1 text-xs font-semibold text-blue-600 hover:text-blue-700 sm:h-14"
+          className="flex h-10 shrink-0 items-center px-1 text-xs font-semibold text-blue-600 hover:text-blue-700 sm:h-12"
         >
           すべて
         </button>
