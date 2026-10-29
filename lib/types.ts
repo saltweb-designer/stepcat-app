@@ -137,14 +137,6 @@ export interface NoteDoc {
   text: string;
 }
 
-export interface ExternalApp {
-  id: string;
-  name: string;
-  description: string;
-  href: string;
-  iconSrc: string;
-}
-
 /** Firestore の users/{uid}/appLinks/{id} ドキュメントの形。ユーザーが自由に登録する関連アプリ */
 export interface AppLinkDoc {
   id: string;

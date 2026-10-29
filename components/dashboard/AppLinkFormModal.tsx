@@ -144,11 +144,11 @@ export default function AppLinkFormModal({
               </label>
               <input
                 id="app-link-href"
-                type="url"
+                type="text"
                 inputMode="url"
                 value={href}
                 onChange={(e) => setHref(e.target.value)}
-                placeholder="https://"
+                placeholder="https:// またはアプリ内のパス（/videos）"
                 className={inputClassName}
               />
             </div>
@@ -159,7 +159,7 @@ export default function AppLinkFormModal({
               </label>
               <input
                 id="app-link-icon"
-                type="url"
+                type="text"
                 inputMode="url"
                 value={iconUrl}
                 onChange={(e) => setIconUrl(e.target.value)}
