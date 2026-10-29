@@ -40,6 +40,17 @@ export function normalizeHttpUrl(input: string): string | null {
   }
 }
 
+/** 同じアプリかどうかを判定するためのキー。www・末尾のスラッシュ・クエリの違いは無視する */
+export function appLinkKey(href: string): string {
+  if (isInternalPath(href)) return href.replace(/\/+$/, "");
+  try {
+    const url = new URL(href);
+    return `${url.hostname.replace(/^www\./, "")}${url.pathname.replace(/\/+$/, "")}`;
+  } catch {
+    return href;
+  }
+}
+
 export function getHostname(href: string): string {
   try {
     return new URL(href).hostname.replace(/^www\./, "");
