@@ -42,6 +42,7 @@ export function useVideos(uid: string | undefined, collectionName: MediaCollecti
               channelIconUrl: data.channelIconUrl ?? "",
               categoryId: data.categoryId ?? "",
               memo: data.memo ?? "",
+              pinned: data.pinned ?? false,
             } satisfies VideoDoc;
           })
         );
@@ -79,19 +80,25 @@ export function useVideos(uid: string | undefined, collectionName: MediaCollecti
     });
   };
 
+  const setVideoPinned = async (id: string, pinned: boolean) => {
+    if (!uid) return;
+    await updateDoc(doc(db, "users", uid, collectionName, id), { pinned });
+  };
+
   const deleteVideo = async (id: string) => {
     if (!uid) return;
     await deleteDoc(doc(db, "users", uid, collectionName, id));
   };
 
   return uid
-    ? { videos, loading, error, addVideo, updateVideo, deleteVideo }
+    ? { videos, loading, error, addVideo, updateVideo, setVideoPinned, deleteVideo }
     : {
         videos: [],
         loading: false,
         error: null,
         addVideo: async () => {},
         updateVideo: async () => {},
+        setVideoPinned: async () => {},
         deleteVideo: async () => {},
       };
 }

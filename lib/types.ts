@@ -185,6 +185,9 @@ export interface VideoDoc {
   /** users/{uid}/videoCategories/{id} への参照。空文字、または削除済みカテゴリを指す場合は未分類として扱う */
   categoryId: string;
   memo: string;
+  /** ピン留めした動画は一覧の先頭に固定表示する */
+  pinned: boolean;
 }
 
-export type VideoInput = Omit<VideoDoc, "id">;
+/** ピン留めは入力フォームとは別にカード上で切り替えるので、入力値には含めない */
+export type VideoInput = Omit<VideoDoc, "id" | "pinned">;

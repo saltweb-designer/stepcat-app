@@ -37,7 +37,7 @@ export default function MediaLibraryPage({
   categoriesCollection: "videoCategories" | "musicCategories";
 }) {
   const { user, loading } = useAuth();
-  const { videos, error: videosError, addVideo, updateVideo, deleteVideo } = useVideos(user?.uid, itemsCollection);
+  const { videos, error: videosError, addVideo, updateVideo, setVideoPinned, deleteVideo } = useVideos(user?.uid, itemsCollection);
   const {
     categories,
     error: categoriesError,
@@ -72,9 +72,10 @@ export default function MediaLibraryPage({
 
   const activeChannel = selectedChannel && channels.some((c) => c.key === selectedChannel) ? selectedChannel : null;
 
+  // ピン留めした動画を先頭に固定し、それぞれの中では新しい順を保つ（sort は安定ソート）
   const filteredVideos = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return videos.filter((video) => {
+    const matched = videos.filter((video) => {
       if (selectedCategory === UNCATEGORIZED_ID) {
         if (video.categoryId && categoryNameById.has(video.categoryId)) return false;
       } else if (selectedCategory !== ALL_CATEGORIES && video.categoryId !== selectedCategory) {
@@ -87,6 +88,7 @@ export default function MediaLibraryPage({
         .toLowerCase();
       return haystack.includes(q);
     });
+    return matched.sort((a, b) => Number(b.pinned) - Number(a.pinned));
   }, [videos, selectedCategory, activeChannel, searchQuery, categoryNameById]);
 
   const newVideoCategoryId = selectedCategory === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedCategory;
@@ -163,6 +165,7 @@ export default function MediaLibraryPage({
                     categories={categories}
                     onSave={(input) => updateVideo(video.id, input)}
                     onDelete={() => deleteVideo(video.id)}
+                    onTogglePin={() => setVideoPinned(video.id, !video.pinned)}
                     onManageCategories={() => setCategoryModalOpen(true)}
                     itemLabel={title}
                   />

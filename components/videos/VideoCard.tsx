@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Pin, Trash2 } from "lucide-react";
 import InlineAccordion from "@/components/notes/InlineAccordion";
 import NoteText from "@/components/notes/NoteText";
 import YouTubeEmbed from "@/components/notes/YouTubeEmbed";
@@ -16,6 +16,7 @@ export default function VideoCard({
   categories,
   onSave,
   onDelete,
+  onTogglePin,
   onManageCategories,
   itemLabel = "動画",
 }: {
@@ -24,6 +25,7 @@ export default function VideoCard({
   categories: NoteCategoryDoc[];
   onSave: (input: VideoInput) => Promise<void>;
   onDelete: () => Promise<void>;
+  onTogglePin: () => Promise<void>;
   onManageCategories: () => void;
   /** 削除確認メッセージに使う呼び名（動画・音楽） */
   itemLabel?: string;
@@ -41,6 +43,14 @@ export default function VideoCard({
     } catch (err) {
       console.error("動画の削除に失敗しました", err);
       setDeleting(false);
+    }
+  };
+
+  const handleTogglePin = async () => {
+    try {
+      await onTogglePin();
+    } catch (err) {
+      console.error("ピン留めの切り替えに失敗しました", err);
     }
   };
 
@@ -66,6 +76,17 @@ export default function VideoCard({
         </div>
         {!editing && (
           <div className="flex shrink-0 items-center gap-0.5">
+            <button
+              type="button"
+              onClick={handleTogglePin}
+              className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-gray-100 ${
+                video.pinned ? "text-amber-500 hover:text-amber-600" : "text-gray-400 hover:text-gray-700"
+              }`}
+              aria-label={video.pinned ? "ピン留めを外す" : "ピン留め"}
+              aria-pressed={video.pinned}
+            >
+              <Pin className={`h-3.5 w-3.5 ${video.pinned ? "fill-current" : ""}`} strokeWidth={2} />
+            </button>
             <button
               type="button"
               onClick={() => setEditing(true)}
