@@ -44,6 +44,14 @@ export interface SleepDuration {
   minutes: number;
 }
 
+/** 水分補給の保存履歴（保存ボタンを押した時点の時刻と、その時の増減量） */
+export interface WaterLogEntry {
+  /** 保存した時刻（HH:mm） */
+  time: string;
+  /** 前回保存時からの増減量（ミリリットル） */
+  deltaMl: number;
+}
+
 /** Firestore の users/{uid}/wellness/{date} ドキュメントの形（date = YYYY-MM-DD） */
 export interface WellnessDoc {
   /** 朝の体重 */
@@ -66,6 +74,8 @@ export interface WellnessDoc {
   conditionChangeNote: string;
   /** 水分摂取量（ミリリットル） */
   waterIntakeMl: number;
+  /** 水分補給の保存履歴 */
+  waterLog: WaterLogEntry[];
 }
 
 export const EMPTY_WELLNESS: WellnessDoc = {
@@ -81,6 +91,7 @@ export const EMPTY_WELLNESS: WellnessDoc = {
   hasConditionChange: false,
   conditionChangeNote: "",
   waterIntakeMl: 0,
+  waterLog: [],
 };
 
 function isSleepDuration(value: unknown): value is SleepDuration {
@@ -99,6 +110,7 @@ export function normalizeWellnessDoc(raw: Record<string, unknown>): WellnessDoc 
     ...raw,
     sleepHours: isSleepDuration(raw.sleepHours) ? raw.sleepHours : EMPTY_WELLNESS.sleepHours,
     waterIntakeMl: typeof raw.waterIntakeMl === "number" ? raw.waterIntakeMl : EMPTY_WELLNESS.waterIntakeMl,
+    waterLog: Array.isArray(raw.waterLog) ? raw.waterLog : EMPTY_WELLNESS.waterLog,
   } as WellnessDoc;
 }
 

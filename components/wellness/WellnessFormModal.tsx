@@ -2,19 +2,21 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
-import { EMPTY_WELLNESS, type WellnessDoc } from "@/lib/types";
+import { EMPTY_WELLNESS, type WaterLogEntry, type WellnessDoc } from "@/lib/types";
 
 const HOUR_OPTIONS = Array.from({ length: 25 }, (_, i) => i);
-const MINUTE_OPTIONS = [0, 10, 20, 30, 40, 50];
+const MINUTE_OPTIONS = Array.from({ length: 12 }, (_, i) => i * 5);
 const WATER_QUICK_ADD_ML = [100, 200, 300, 350];
 const WATER_FINE_STEP_ML = 50;
 
 function WaterIntakeInput({
   valueMl,
   onChange,
+  log,
 }: {
   valueMl: number;
   onChange: (v: number) => void;
+  log: WaterLogEntry[];
 }) {
   const clamp = (v: number) => Math.max(0, v);
 
@@ -66,6 +68,15 @@ function WaterIntakeInput({
           </button>
         ))}
       </div>
+
+      {log.length > 0 && (
+        <p className="mt-1.5 text-[10px] leading-relaxed text-gray-400">
+          記録:{" "}
+          {log
+            .map((entry) => `${entry.time} ${entry.deltaMl > 0 ? "+" : ""}${entry.deltaMl}ml`)
+            .join(" / ")}
+        </p>
+      )}
     </div>
   );
 }
@@ -155,7 +166,13 @@ export default function WellnessFormModal({
     setSaving(true);
     setError(null);
     try {
-      await onSave(form);
+      // 水分量が変わっていれば、保存した時刻を履歴に残す
+      const deltaMl = form.waterIntakeMl - (initialData?.waterIntakeMl ?? 0);
+      const now = new Date();
+      const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      await onSave(
+        deltaMl === 0 ? form : { ...form, waterLog: [...form.waterLog, { time, deltaMl }] }
+      );
       onClose();
     } catch (err) {
       console.error("体調記録の保存に失敗しました", err);
@@ -279,6 +296,7 @@ export default function WellnessFormModal({
             <WaterIntakeInput
               valueMl={form.waterIntakeMl}
               onChange={(v) => update("waterIntakeMl", v)}
+              log={form.waterLog}
             />
 
             <ToggleRow
