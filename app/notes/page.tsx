@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { NotebookPen } from "lucide-react";
+import { NotebookPen, Search, X } from "lucide-react";
 import Header from "@/components/layout/Header";
 import LoginPrompt from "@/components/auth/LoginPrompt";
 import ErrorBanner from "@/components/dashboard/ErrorBanner";
-import AiQuickAskBox from "@/components/notes/AiQuickAskBox";
 import NewNoteCard from "@/components/notes/NewNoteCard";
 import NoteCard from "@/components/notes/NoteCard";
 import NoteCategoryFilter, { ALL_CATEGORIES } from "@/components/notes/NoteCategoryFilter";
@@ -17,17 +16,27 @@ import { UNCATEGORIZED_ID } from "@/lib/notes";
 
 export default function NotesPage() {
   const { user, loading } = useAuth();
-  const { notes, error: notesError, addNote, updateNote, duplicateNote, deleteNote } = useNotes(user?.uid);
+  const {
+    notes,
+    error: notesError,
+    addNote,
+    updateNote,
+    duplicateNote,
+    setNotePinned,
+    deleteNote,
+  } = useNotes(user?.uid);
   const {
     categories,
     error: categoriesError,
     addCategory,
     renameCategory,
     deleteCategory,
+    reorderCategories,
   } = useNoteCategories(user?.uid);
 
   const [selectedFilter, setSelectedFilter] = useState<string>(ALL_CATEGORIES);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const categoryNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -38,12 +47,23 @@ export default function NotesPage() {
   const categoryNameFor = (categoryId: string) => categoryNameById.get(categoryId) ?? "未分類";
 
   const filteredNotes = useMemo(() => {
-    if (selectedFilter === ALL_CATEGORIES) return notes;
+    let result = notes;
     if (selectedFilter === UNCATEGORIZED_ID) {
-      return notes.filter((note) => !note.categoryId || !categoryNameById.has(note.categoryId));
+      result = result.filter((note) => !note.categoryId || !categoryNameById.has(note.categoryId));
+    } else if (selectedFilter !== ALL_CATEGORIES) {
+      result = result.filter((note) => note.categoryId === selectedFilter);
     }
-    return notes.filter((note) => note.categoryId === selectedFilter);
-  }, [notes, selectedFilter, categoryNameById]);
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (note) =>
+          note.text.toLowerCase().includes(q) ||
+          (categoryNameById.get(note.categoryId) ?? "未分類").toLowerCase().includes(q)
+      );
+    }
+    // ピン留めしたノートを先頭に。それ以外は更新順のまま
+    return [...result].sort((a, b) => Number(b.pinned) - Number(a.pinned));
+  }, [notes, selectedFilter, searchQuery, categoryNameById]);
 
   const newNoteCategoryId = selectedFilter === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedFilter;
 
@@ -59,12 +79,34 @@ export default function NotesPage() {
           <>
             {(notesError || categoriesError) && <ErrorBanner message={notesError ?? categoriesError ?? ""} />}
 
-            <AiQuickAskBox />
+            {/* AIに相談（AiQuickAskBox）は活用できていないため一旦非表示 */}
 
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-              <NotebookPen className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
-              ノート
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-gray-700">
+                <NotebookPen className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
+                ノート
+              </h2>
+              <div className="relative w-full max-w-[45%] sm:max-w-[14rem]">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="検索"
+                  className="w-full rounded-full bg-white py-1.5 pl-7 pr-7 text-base text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-black/20 sm:text-xs [&::-webkit-search-cancel-button]:hidden"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label="検索をクリア"
+                  >
+                    <X className="h-3.5 w-3.5" strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+            </div>
 
             <NoteCategoryFilter
               categories={categories}
@@ -81,7 +123,9 @@ export default function NotesPage() {
             />
 
             {filteredNotes.length === 0 ? (
-              <p className="py-8 text-center text-sm text-gray-400">まだノートがありません</p>
+              <p className="py-8 text-center text-sm text-gray-400">
+                {searchQuery.trim() ? "見つかりませんでした" : "まだノートがありません"}
+              </p>
             ) : (
               <div className="flex flex-col gap-3">
                 {filteredNotes.map((note) => (
@@ -92,6 +136,7 @@ export default function NotesPage() {
                     categories={categories}
                     onSave={(categoryId, text) => updateNote(note.id, categoryId, text)}
                     onDuplicate={() => duplicateNote(note)}
+                    onTogglePin={() => setNotePinned(note.id, !note.pinned)}
                     onDelete={() => deleteNote(note.id)}
                     onManageCategories={() => setCategoryModalOpen(true)}
                   />
@@ -110,6 +155,7 @@ export default function NotesPage() {
           onAdd={addCategory}
           onRename={renameCategory}
           onDelete={deleteCategory}
+          onReorder={reorderCategories}
           onClose={() => setCategoryModalOpen(false)}
         />
       )}

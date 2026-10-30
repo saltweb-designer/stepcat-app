@@ -135,6 +135,8 @@ export interface NoteDoc {
   /** NoteCategoryDoc.id への参照。空文字、または削除済みカテゴリを指す場合は未分類として扱う */
   categoryId: string;
   text: string;
+  /** ピン留めしたノートは一覧の一番上に表示する */
+  pinned: boolean;
 }
 
 /** Firestore の users/{uid}/appLinks/{id} ドキュメントの形。ユーザーが自由に登録する関連アプリ */

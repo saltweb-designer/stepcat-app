@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Pin, Trash2 } from "lucide-react";
 import InlineAccordion from "./InlineAccordion";
 import NoteInlineForm from "./NoteInlineForm";
 import NoteText from "./NoteText";
@@ -13,6 +13,7 @@ export default function NoteCard({
   categories,
   onSave,
   onDuplicate,
+  onTogglePin,
   onDelete,
   onManageCategories,
 }: {
@@ -21,6 +22,7 @@ export default function NoteCard({
   categories: NoteCategoryDoc[];
   onSave: (categoryId: string, text: string) => Promise<void>;
   onDuplicate: () => Promise<void>;
+  onTogglePin: () => Promise<void>;
   onDelete: () => Promise<void>;
   onManageCategories: () => void;
 }) {
@@ -37,6 +39,14 @@ export default function NoteCard({
       console.error("ノートの複製に失敗しました", err);
     } finally {
       setDuplicating(false);
+    }
+  };
+
+  const handleTogglePin = async () => {
+    try {
+      await onTogglePin();
+    } catch (err) {
+      console.error("ノートのピン留めに失敗しました", err);
     }
   };
 
@@ -65,6 +75,17 @@ export default function NoteCard({
         </span>
         {!editing && (
           <div className="flex shrink-0 items-center gap-0.5">
+            <button
+              type="button"
+              onClick={handleTogglePin}
+              className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-gray-100 ${
+                note.pinned ? "text-amber-500 hover:text-amber-600" : "text-gray-400 hover:text-gray-700"
+              }`}
+              aria-label={note.pinned ? "ピン留めを外す" : "ピン留め"}
+              aria-pressed={note.pinned}
+            >
+              <Pin className={`h-3.5 w-3.5 ${note.pinned ? "fill-current" : ""}`} strokeWidth={2} />
+            </button>
             <button
               type="button"
               onClick={() => setEditing(true)}

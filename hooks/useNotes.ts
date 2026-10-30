@@ -34,6 +34,7 @@ export function useNotes(uid: string | undefined) {
               id: docSnap.id,
               categoryId: data.categoryId ?? "",
               text: data.text ?? "",
+              pinned: data.pinned ?? false,
             } satisfies NoteDoc;
           })
         );
@@ -83,13 +84,19 @@ export function useNotes(uid: string | undefined) {
     });
   };
 
+  /** ピン留めの切り替えでは updatedAt を変えず、一覧の並び順（更新順）を崩さない */
+  const setNotePinned = async (id: string, pinned: boolean) => {
+    if (!uid) return;
+    await updateDoc(doc(db, "users", uid, "notes", id), { pinned });
+  };
+
   const deleteNote = async (id: string) => {
     if (!uid) return;
     await deleteDoc(doc(db, "users", uid, "notes", id));
   };
 
   return uid
-    ? { notes, loading, error, addNote, updateNote, duplicateNote, deleteNote }
+    ? { notes, loading, error, addNote, updateNote, duplicateNote, setNotePinned, deleteNote }
     : {
         notes: [],
         loading: false,
@@ -97,6 +104,7 @@ export function useNotes(uid: string | undefined) {
         addNote: async () => {},
         updateNote: async () => {},
         duplicateNote: async () => {},
+        setNotePinned: async () => {},
         deleteNote: async () => {},
       };
 }

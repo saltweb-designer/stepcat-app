@@ -1,17 +1,30 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
+import { Check, GripVertical, Pencil, Plus, Trash2, X } from "lucide-react";
 import type { NoteCategoryDoc } from "@/lib/types";
+
+/** つまみを押したまま並び替えるときの、つまみ部分に付けるイベント */
+interface DragHandleProps {
+  onPointerDown: (e: PointerEvent<HTMLButtonElement>) => void;
+  onPointerMove: (e: PointerEvent<HTMLButtonElement>) => void;
+  onPointerUp: () => void;
+  onPointerCancel: () => void;
+}
 
 function CategoryRow({
   category,
   itemLabel,
+  dragging,
+  dragHandle,
   onRename,
   onDelete,
 }: {
   category: NoteCategoryDoc;
   itemLabel: string;
+  dragging: boolean;
+  /** 渡したときだけ並び替え用のつまみを表示する */
+  dragHandle?: DragHandleProps;
   onRename: (name: string) => Promise<void>;
   onDelete: () => Promise<void>;
 }) {
@@ -80,7 +93,22 @@ function CategoryRow({
   }
 
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-2.5 py-2">
+    <div
+      data-category-id={category.id}
+      className={`flex items-center justify-between gap-2 rounded-lg border bg-white px-2.5 py-2 transition-shadow ${
+        dragging ? "relative z-10 border-gray-400 shadow-lg" : "border-gray-200"
+      }`}
+    >
+      {dragHandle && (
+        <button
+          type="button"
+          {...dragHandle}
+          className="-ml-1 flex h-7 w-6 shrink-0 cursor-grab touch-none select-none items-center justify-center text-gray-300 hover:text-gray-500 active:cursor-grabbing"
+          aria-label={`${category.name}をドラッグして並び替え`}
+        >
+          <GripVertical className="pointer-events-none h-4 w-4" strokeWidth={2} />
+        </button>
+      )}
       <span className="min-w-0 flex-1 truncate text-sm text-gray-700">{category.name}</span>
       <div className="flex shrink-0 items-center gap-0.5">
         <button
@@ -111,6 +139,7 @@ export default function NoteCategoryModal({
   onAdd,
   onRename,
   onDelete,
+  onReorder,
   onClose,
 }: {
   categories: NoteCategoryDoc[];
@@ -119,10 +148,57 @@ export default function NoteCategoryModal({
   onAdd: (name: string) => Promise<void>;
   onRename: (id: string, name: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  /** 渡したときだけ、つまみのドラッグで並び替えできる */
+  onReorder?: (orderedIds: string[]) => Promise<void>;
   onClose: () => void;
 }) {
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
+  /** ドラッグ中の並び順（id の配列）。ドラッグしていないときは null */
+  const [draftOrder, setDraftOrder] = useState<string[] | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const dragRef = useRef<string | null>(null);
+
+  const displayedCategories = draftOrder
+    ? draftOrder.flatMap((id) => categories.find((category) => category.id === id) ?? [])
+    : categories;
+
+  const handlePointerDown = (e: PointerEvent<HTMLButtonElement>, id: string) => {
+    if (e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = id;
+    setDraggingId(id);
+    setDraftOrder(categories.map((category) => category.id));
+  };
+
+  const handlePointerMove = (e: PointerEvent<HTMLButtonElement>) => {
+    const dragId = dragRef.current;
+    if (!dragId) return;
+    const target = document
+      .elementFromPoint(e.clientX, e.clientY)
+      ?.closest<HTMLElement>("[data-category-id]")?.dataset.categoryId;
+    if (!target || target === dragId) return;
+    setDraftOrder((prev) => {
+      if (!prev) return prev;
+      const next = prev.filter((id) => id !== dragId);
+      next.splice(prev.indexOf(target), 0, dragId);
+      return next;
+    });
+  };
+
+  const handlePointerEnd = async () => {
+    if (!dragRef.current) return;
+    dragRef.current = null;
+    setDraggingId(null);
+    const order = draftOrder;
+    try {
+      if (onReorder && order && order.some((id, i) => id !== categories[i]?.id)) await onReorder(order);
+    } catch (err) {
+      console.error("カテゴリの並び替えに失敗しました", err);
+    } finally {
+      setDraftOrder(null);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -178,11 +254,25 @@ export default function NoteCategoryModal({
             {categories.length === 0 && (
               <p className="py-2 text-sm text-gray-400">まだカテゴリがありません</p>
             )}
-            {categories.map((category) => (
+            {onReorder && categories.length > 1 && (
+              <p className="text-xs text-gray-400">左のつまみをドラッグで並び替え</p>
+            )}
+            {displayedCategories.map((category) => (
               <CategoryRow
                 key={category.id}
                 category={category}
                 itemLabel={itemLabel}
+                dragging={draggingId === category.id}
+                dragHandle={
+                  onReorder && categories.length > 1
+                    ? {
+                        onPointerDown: (e) => handlePointerDown(e, category.id),
+                        onPointerMove: handlePointerMove,
+                        onPointerUp: handlePointerEnd,
+                        onPointerCancel: handlePointerEnd,
+                      }
+                    : undefined
+                }
                 onRename={(name) => onRename(category.id, name)}
                 onDelete={() => onDelete(category.id)}
               />

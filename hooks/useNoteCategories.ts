@@ -11,6 +11,7 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { NoteCategoryDoc } from "@/lib/types";
@@ -82,8 +83,16 @@ export function useNoteCategories(
     await deleteDoc(doc(db, "users", uid, collectionName, id));
   };
 
+  /** 並べ替え後の id の順番どおりに order を振り直す */
+  const reorderCategories = async (orderedIds: string[]) => {
+    if (!uid) return;
+    const batch = writeBatch(db);
+    orderedIds.forEach((id, i) => batch.update(doc(db, "users", uid, collectionName, id), { order: i }));
+    await batch.commit();
+  };
+
   return uid
-    ? { categories, loading, error, addCategory, renameCategory, deleteCategory }
+    ? { categories, loading, error, addCategory, renameCategory, deleteCategory, reorderCategories }
     : {
         categories: [],
         loading: false,
@@ -91,5 +100,6 @@ export function useNoteCategories(
         addCategory: async () => {},
         renameCategory: async () => {},
         deleteCategory: async () => {},
+        reorderCategories: async () => {},
       };
 }
