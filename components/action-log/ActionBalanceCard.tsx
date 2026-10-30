@@ -18,9 +18,12 @@ export interface BalancePeriod {
 export default function ActionBalanceCard({
   periods,
   embedded = false,
+  compactTitle = false,
 }: {
   periods: BalancePeriod[];
   embedded?: boolean;
+  /** 見出しを小さく表示する（予定ページ用） */
+  compactTitle?: boolean;
 }) {
   const { user } = useAuth();
   const [periodIndex, setPeriodIndex] = useState(0);
@@ -31,8 +34,8 @@ export default function ActionBalanceCard({
   return (
     <section className={embedded ? "" : "rounded-2xl bg-white p-4 shadow-sm sm:p-5"}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
-          <Scale className="h-4 w-4 text-gray-500" strokeWidth={2} />
+        <h2 className={`flex items-center gap-1.5 font-bold ${compactTitle ? "text-xs text-gray-600" : "text-sm text-gray-900"}`}>
+          <Scale className={`text-gray-500 ${compactTitle ? "h-3.5 w-3.5" : "h-4 w-4"}`} strokeWidth={2} />
           行動の起点バランス
         </h2>
         {periods.length > 1 ? (
