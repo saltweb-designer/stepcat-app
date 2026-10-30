@@ -70,6 +70,7 @@ export default function MediaLibraryPage({
     addCategory,
     renameCategory,
     deleteCategory,
+    reorderCategories,
   } = useNoteCategories(user?.uid, categoriesCollection);
   const { order: channelOrder, saveOrder: saveChannelOrder } = useChannelOrder(user?.uid, itemsCollection);
 
@@ -260,6 +261,7 @@ export default function MediaLibraryPage({
           onAdd={addCategory}
           onRename={renameCategory}
           onDelete={deleteCategory}
+          onReorder={reorderCategories}
           onClose={() => setCategoryModalOpen(false)}
         />
       )}

@@ -24,6 +24,15 @@ export default function NoteCategoryFilter({
 
   return (
     <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+      <button
+        type="button"
+        onClick={onManage}
+        aria-label="カテゴリを管理"
+        title="カテゴリを管理"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white hover:text-gray-700"
+      >
+        <Tags className="h-3.5 w-3.5" strokeWidth={2} />
+      </button>
       <button type="button" onClick={() => onSelect(ALL_CATEGORIES)} className={chipClass(selected === ALL_CATEGORIES)}>
         すべて
       </button>
@@ -43,15 +52,6 @@ export default function NoteCategoryFilter({
         className={chipClass(selected === UNCATEGORIZED_ID)}
       >
         未分類
-      </button>
-      <button
-        type="button"
-        onClick={onManage}
-        aria-label="カテゴリを管理"
-        title="カテゴリを管理"
-        className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white hover:text-gray-700"
-      >
-        <Tags className="h-3.5 w-3.5" strokeWidth={2} />
       </button>
     </div>
   );
