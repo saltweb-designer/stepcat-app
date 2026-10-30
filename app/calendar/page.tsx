@@ -57,7 +57,8 @@ function MonthNav({
   const iconClassName = compact ? "h-3.5 w-3.5" : "h-4 w-4";
   const labelClassName = `font-bold text-gray-900 ${compact ? "text-xs" : "text-sm"}`;
   return (
-    <div className={`flex items-center justify-between ${className ?? ""}`}>
+    // 矢印を端に置くとスマホで押しにくいので、月の表示のすぐ両隣に寄せる
+    <div className={`flex items-center justify-center gap-6 ${className ?? ""}`}>
       <button type="button" onClick={onPrev} aria-label="前の月" className={arrowClassName}>
         <ChevronLeft className={iconClassName} strokeWidth={2} />
       </button>
@@ -71,7 +72,7 @@ function MonthNav({
           {label}
         </button>
       ) : (
-        <p className={labelClassName}>{label}</p>
+        <p className={`${labelClassName} px-3`}>{label}</p>
       )}
       <button type="button" onClick={onNext} aria-label="次の月" className={arrowClassName}>
         <ChevronRight className={iconClassName} strokeWidth={2} />

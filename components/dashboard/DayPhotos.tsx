@@ -1,23 +1,33 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { ImagePlus, Loader2, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImagePlus, Loader2, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDayPhotos } from "@/hooks/useDayPhotos";
 import type { DayPhotoDoc } from "@/lib/types";
 
 function PhotoViewer({
-  photo,
+  photos,
+  index,
+  onIndexChange,
   onClose,
   onDelete,
 }: {
-  photo: DayPhotoDoc;
+  photos: DayPhotoDoc[];
+  index: number;
+  onIndexChange: (index: number) => void;
   onClose: () => void;
   onDelete: () => void;
 }) {
+  const photo = photos[index];
+  const hasPrev = index > 0;
+  const hasNext = index < photos.length - 1;
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && hasPrev) onIndexChange(index - 1);
+      if (e.key === "ArrowRight" && hasNext) onIndexChange(index + 1);
     };
     document.addEventListener("keydown", handleKeyDown);
     document.body.style.overflow = "hidden";
@@ -25,7 +35,10 @@ function PhotoViewer({
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [onClose]);
+  }, [onClose, onIndexChange, index, hasPrev, hasNext]);
+
+  const navButtonClassName =
+    "flex items-center gap-1 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/25 disabled:opacity-30 disabled:hover:bg-white/15";
 
   return (
     <div
@@ -57,9 +70,35 @@ function PhotoViewer({
       <img
         src={photo.dataUrl}
         alt=""
-        className="max-h-full max-w-full rounded-lg object-contain"
+        className="max-h-[calc(100%-7rem)] max-w-full rounded-lg object-contain"
         onClick={(e) => e.stopPropagation()}
       />
+      {photos.length > 1 && (
+        <div
+          className="absolute inset-x-0 bottom-6 flex items-center justify-center gap-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => onIndexChange(index - 1)}
+            disabled={!hasPrev}
+            className={navButtonClassName}
+          >
+            <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />前
+          </button>
+          <span className="min-w-12 text-center text-sm text-white/80">
+            {index + 1} / {photos.length}
+          </span>
+          <button
+            type="button"
+            onClick={() => onIndexChange(index + 1)}
+            disabled={!hasNext}
+            className={navButtonClassName}
+          >
+            次<ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -71,7 +110,8 @@ export default function DayPhotos({ date }: { date: string }) {
   const [viewingId, setViewingId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const viewing = photos.find((p) => p.id === viewingId) ?? null;
+  const viewingIndex = photos.findIndex((p) => p.id === viewingId);
+  const viewing = viewingIndex >= 0 ? photos[viewingIndex] : null;
 
   const handleChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -136,7 +176,9 @@ export default function DayPhotos({ date }: { date: string }) {
 
       {viewing && (
         <PhotoViewer
-          photo={viewing}
+          photos={photos}
+          index={viewingIndex}
+          onIndexChange={(i) => setViewingId(photos[i].id)}
           onClose={() => setViewingId(null)}
           onDelete={() => handleDelete(viewing)}
         />
