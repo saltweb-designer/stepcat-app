@@ -34,6 +34,40 @@ function cellClassName(
   return "text-gray-700 hover:bg-gray-50";
 }
 
+function MonthNav({
+  className,
+  label,
+  onPrev,
+  onNext,
+}: {
+  className?: string;
+  label: string;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className={`flex items-center justify-between ${className ?? ""}`}>
+      <button
+        type="button"
+        onClick={onPrev}
+        aria-label="前の月"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100"
+      >
+        <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+      </button>
+      <p className="text-sm font-bold text-gray-900">{label}</p>
+      <button
+        type="button"
+        onClick={onNext}
+        aria-label="次の月"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100"
+      >
+        <ChevronRight className="h-4 w-4" strokeWidth={2} />
+      </button>
+    </div>
+  );
+}
+
 export default function CalendarPage() {
   const { user, loading } = useAuth();
   const { entries, error } = useEntries(user?.uid);
@@ -106,6 +140,13 @@ export default function CalendarPage() {
           <>
             {error && <ErrorBanner message={error} />}
 
+            <MonthNav
+              className="rounded-2xl bg-white px-2 py-2 shadow-sm"
+              label={`${viewYear}年${viewMonth}月`}
+              onPrev={goToPrevMonth}
+              onNext={goToNextMonth}
+            />
+
             <MonthGoalCard monthKey={viewMonthKey} monthLabel={`${viewYear}年${viewMonth}月`} />
 
             <ActionBalanceCard periods={[monthPeriod]} />
@@ -139,27 +180,12 @@ export default function CalendarPage() {
             </section>
 
             <section className="rounded-2xl bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={goToPrevMonth}
-                  aria-label="前の月"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100"
-                >
-                  <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-                </button>
-                <p className="text-sm font-bold text-gray-900">
-                  {viewYear}年{viewMonth}月
-                </p>
-                <button
-                  type="button"
-                  onClick={goToNextMonth}
-                  aria-label="次の月"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100"
-                >
-                  <ChevronRight className="h-4 w-4" strokeWidth={2} />
-                </button>
-              </div>
+              <MonthNav
+                className="mb-3"
+                label={`${viewYear}年${viewMonth}月`}
+                onPrev={goToPrevMonth}
+                onNext={goToNextMonth}
+              />
 
               <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-gray-400">
                 {WEEKDAY_HEADERS.map((label) => (
