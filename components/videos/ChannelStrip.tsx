@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ChannelAvatar from "./ChannelAvatar";
 
-/** スマホで最初に表示するチャンネル数。残りは「続き」で表示する */
+/** スマホ・iPad（タッチ操作の端末）で最初に表示するチャンネル数。残りは「続き」で表示する */
 const MOBILE_VISIBLE_COUNT = 4;
 
 export interface ChannelSummary {
@@ -33,7 +33,7 @@ export default function ChannelStrip({
     <div className="-mx-4 flex gap-3 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
       {channels.map((channel, index) => {
         const active = selected === channel.key;
-        const hiddenOnMobile = !showAll && index >= MOBILE_VISIBLE_COUNT;
+        const hiddenOnTouch = !showAll && index >= MOBILE_VISIBLE_COUNT;
         return (
           <button
             key={channel.key}
@@ -42,7 +42,7 @@ export default function ChannelStrip({
             aria-pressed={active}
             title={channel.name}
             className={`flex w-[3.25rem] shrink-0 flex-col items-center gap-1 transition-opacity sm:w-[3.75rem] ${
-              hiddenOnMobile ? "max-sm:hidden" : ""
+              hiddenOnTouch ? "max-sm:hidden pointer-coarse:hidden" : ""
             } ${selected && !active ? "opacity-40 hover:opacity-70" : ""}`}
           >
             <ChannelAvatar
@@ -61,7 +61,7 @@ export default function ChannelStrip({
           type="button"
           onClick={() => setExpanded((value) => !value)}
           aria-expanded={showAll}
-          className="flex h-10 shrink-0 items-center px-1 text-xs font-semibold text-blue-600 hover:text-blue-700 sm:hidden"
+          className="hidden h-10 shrink-0 items-center px-1 text-xs font-semibold text-blue-600 hover:text-blue-700 max-sm:flex pointer-coarse:flex sm:h-12"
         >
           {showAll ? "閉じる" : `続き（${hiddenCount}）`}
         </button>
