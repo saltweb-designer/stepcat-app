@@ -10,16 +10,25 @@ import WeeklyReviewAccordion from "@/components/dashboard/WeeklyReviewAccordion"
 import ActionBalanceCard from "@/components/action-log/ActionBalanceCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEntries } from "@/hooks/useEntries";
+import { useWeekColors } from "@/hooks/useWeekColors";
 import { getMonthGrid, toMonthKey, type MonthCell } from "@/lib/month";
 import { getDatesWithEntries } from "@/lib/build-week-entries";
 import { getHolidayName } from "@/lib/holidays";
 import { toIsoDate } from "@/lib/week";
+import { WEEK_BAND_STYLES, getWeekBand } from "@/lib/week-colors";
 
 const WEEKDAY_HEADERS = ["月", "火", "水", "木", "金", "土", "日"];
 
-function cellClassName(cell: MonthCell, isInOpenWeek: boolean, holidayName: string | undefined) {
+function cellClassName(
+  cell: MonthCell,
+  isInOpenWeek: boolean,
+  holidayName: string | undefined,
+  goalClassName: string | undefined
+) {
+  // 今日が目的の日でもあるときは、目的の日の色に赤い輪をつけて両方わかるようにする
+  if (goalClassName) return cell.isToday ? `${goalClassName} ring-2 ring-red-500 ring-offset-1` : goalClassName;
+  if (cell.isToday) return "bg-red-500 font-bold text-white hover:bg-red-600";
   if (!cell.inCurrentMonth) return "text-gray-300 hover:bg-gray-50";
-  if (cell.isToday) return "bg-gray-100 font-bold text-gray-900 hover:bg-gray-200";
   if (isInOpenWeek) return "bg-gray-50 text-gray-900 hover:bg-gray-100";
   if (holidayName) return "text-rose-600 hover:bg-gray-50";
   return "text-gray-700 hover:bg-gray-50";
@@ -28,6 +37,7 @@ function cellClassName(cell: MonthCell, isInOpenWeek: boolean, holidayName: stri
 export default function CalendarPage() {
   const { user, loading } = useAuth();
   const { entries, error } = useEntries(user?.uid);
+  const { colors: weekColors, goalDates, saveWeekColor, toggleGoalDate } = useWeekColors(user?.uid);
 
   const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(today.getFullYear());
@@ -111,6 +121,17 @@ export default function CalendarPage() {
                       entries={entries}
                       open={openWeekIndex === index}
                       onToggle={() => setOpenWeekIndex((current) => (current === index ? null : index))}
+                      markColor={weekColors[weekCells[0].date]}
+                      onChangeMarkColor={(color) => {
+                        saveWeekColor(
+                          weekCells.map((cell) => cell.date),
+                          color
+                        ).catch((err) => console.error("週の色の保存に失敗しました", err));
+                      }}
+                      goalDates={goalDates}
+                      onToggleGoalDate={(date) => {
+                        toggleGoalDate(date).catch((err) => console.error("目的の日の保存に失敗しました", err));
+                      }}
                     />
                   </div>
                 ))}
@@ -147,28 +168,38 @@ export default function CalendarPage() {
               </div>
 
               <div className="mt-1 flex flex-col gap-1">
-                {weeks.map((week) => (
-                  <div key={week[0].date} className="grid grid-cols-7 gap-1">
-                    {week.map((cell) => {
-                      const holidayName = getHolidayName(cell.date);
-                      const hasEntries = datesWithEntries.has(cell.date);
-                      const isInOpenWeek = openWeekIndex !== null && weekIndexByDate.get(cell.date) === openWeekIndex;
-                      return (
-                        <button
-                          key={cell.date}
-                          type="button"
-                          onClick={() => handleSelectDate(cell.date)}
-                          className={`flex flex-col items-center gap-0.5 rounded-lg py-2 text-sm transition-colors ${cellClassName(cell, isInOpenWeek, holidayName)}`}
-                        >
-                          <span>{cell.day}</span>
-                          <span
-                            className={`h-1 w-1 rounded-full ${hasEntries ? "bg-gray-900" : "bg-transparent"}`}
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
+                {weeks.map((week) => {
+                  // 今日を含む週・色をつけた週は、週の振り返りの枠と同じ色で区間を塗る
+                  const markColor = weekColors[week[0].date];
+                  const band = getWeekBand(week.some((cell) => cell.isToday), markColor);
+                  return (
+                    <div key={week[0].date} className={`grid grid-cols-7 gap-1 rounded-lg ${band ? band.row : ""}`}>
+                      {week.map((cell) => {
+                        const holidayName = getHolidayName(cell.date);
+                        // 目的の日は、その週に選んだ色（青・緑）の濃い色で塗る
+                        const goalClassName =
+                          markColor && goalDates.has(cell.date) ? WEEK_BAND_STYLES[markColor].goal : undefined;
+                        const hasEntries = datesWithEntries.has(cell.date);
+                        // 色の帯がある週は、開いているときの灰色で帯が隠れないようにする
+                        const isInOpenWeek =
+                          !band && openWeekIndex !== null && weekIndexByDate.get(cell.date) === openWeekIndex;
+                        return (
+                          <button
+                            key={cell.date}
+                            type="button"
+                            onClick={() => handleSelectDate(cell.date)}
+                            className={`flex flex-col items-center gap-0.5 rounded-lg py-2 text-sm transition-colors ${cellClassName(cell, isInOpenWeek, holidayName, goalClassName)}`}
+                          >
+                            <span>{cell.day}</span>
+                            <span
+                              className={`h-1 w-1 rounded-full ${hasEntries ? (cell.isToday || goalClassName ? "bg-white" : "bg-gray-900") : "bg-transparent"}`}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           </>
