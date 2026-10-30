@@ -121,6 +121,17 @@ export function formatSleepDuration(sleep: SleepDuration): string {
   return `${sleep.hours}時間${sleep.minutes}分`;
 }
 
+/** Firestore の users/{uid}/dayPhotos/{id} ドキュメントの形。1枚ごとに1ドキュメント（1MB上限を日単位で共有しないため） */
+export interface DayPhotoDoc {
+  id: string;
+  /** ISO date string (YYYY-MM-DD) */
+  date: string;
+  /** 圧縮済み JPEG の data URL */
+  dataUrl: string;
+  /** 並び順用の作成時刻（ミリ秒） */
+  createdAtMs: number;
+}
+
 /** Firestore の users/{uid}/noteCategories/{id} ドキュメントの形 */
 export interface NoteCategoryDoc {
   id: string;

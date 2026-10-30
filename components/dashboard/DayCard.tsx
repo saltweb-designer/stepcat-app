@@ -4,6 +4,7 @@ import ScheduleBadge from "./ScheduleBadge";
 import TaskChecklist from "./TaskChecklist";
 import MemoList from "./MemoList";
 import LinkChips from "./LinkChips";
+import DayPhotos from "./DayPhotos";
 import WellnessSection from "@/components/wellness/WellnessSection";
 import ActionLogSection from "@/components/action-log/ActionLogSection";
 
@@ -68,6 +69,8 @@ export default function DayCard({ entry }: { entry: DayEntry }) {
       </div>
 
       <WellnessSection date={entry.date} />
+
+      <DayPhotos date={entry.date} />
 
       <ActionLogSection date={entry.date} />
 
