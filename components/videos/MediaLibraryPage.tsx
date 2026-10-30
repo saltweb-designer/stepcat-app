@@ -12,6 +12,7 @@ import NewVideoCard from "@/components/videos/NewVideoCard";
 import NowPlayingButton from "@/components/videos/NowPlayingButton";
 import VideoCard from "@/components/videos/VideoCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChannelOrder } from "@/hooks/useChannelOrder";
 import { useMediaPlayer } from "@/contexts/MediaPlayerContext";
 import { useNoteCategories } from "@/hooks/useNoteCategories";
 import { useVideos, type MediaCollection } from "@/hooks/useVideos";
@@ -70,6 +71,7 @@ export default function MediaLibraryPage({
     renameCategory,
     deleteCategory,
   } = useNoteCategories(user?.uid, categoriesCollection);
+  const { order: channelOrder, saveOrder: saveChannelOrder } = useChannelOrder(user?.uid, itemsCollection);
 
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORIES);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
@@ -89,7 +91,8 @@ export default function MediaLibraryPage({
 
   const categoryNameFor = (categoryId: string) => categoryNameById.get(categoryId) ?? "未分類";
 
-  // 動画は新しい順に並んでいるので、最近登録したチャンネルほど先頭に来る
+  // 並び替えで保存した順番を使う。まだ並び順に入っていない新しいチャンネルは先頭に置き、
+  // その中では動画が新しい順なので、最近登録したチャンネルほど先頭に来る
   const channels = useMemo(() => {
     const map = new Map<string, ChannelSummary>();
     for (const video of videos) {
@@ -97,8 +100,11 @@ export default function MediaLibraryPage({
       if (!key || map.has(key)) continue;
       map.set(key, { key, name: video.channelName || "名称未設定", iconUrl: video.channelIconUrl });
     }
-    return [...map.values()];
-  }, [videos]);
+    const saved = new Set(channelOrder);
+    const newChannels = [...map.values()].filter((channel) => !saved.has(channel.key));
+    const orderedChannels = channelOrder.flatMap((key) => map.get(key) ?? []);
+    return [...newChannels, ...orderedChannels];
+  }, [videos, channelOrder]);
 
   const activeChannel = selectedChannel && channels.some((c) => c.key === selectedChannel) ? selectedChannel : null;
 
@@ -194,7 +200,12 @@ export default function MediaLibraryPage({
             </div>
 
             {channels.length > 0 && (
-              <ChannelStrip channels={channels} selected={activeChannel} onSelect={setSelectedChannel} />
+              <ChannelStrip
+                channels={channels}
+                selected={activeChannel}
+                onSelect={setSelectedChannel}
+                onReorder={(keys) => saveChannelOrder(keys)}
+              />
             )}
 
             <NoteCategoryFilter
