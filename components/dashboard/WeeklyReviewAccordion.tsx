@@ -144,7 +144,7 @@ export default function WeeklyReviewAccordion({
           {/* アコーディオンの中では箱を重ねず、入力欄を横いっぱいに使えるようにする */}
           {/* 背景のグレーを左右の端まで広げて、入力できる場所だとひと目でわかるようにする */}
           <div className="-mx-4 bg-gray-100 px-4 py-3 sm:-mx-5 sm:px-5">
-            <WeekSummaryCard weekStartDate={cells[0].date} plain />
+            <WeekSummaryCard weekStartDate={cells[0].date} plain rangeLabel={formatRangeLabel(cells)} />
           </div>
           <ActionBalanceCard
             periods={[

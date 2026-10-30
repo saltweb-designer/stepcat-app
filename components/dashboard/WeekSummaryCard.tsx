@@ -9,12 +9,15 @@ export default function WeekSummaryCard({
   weekStartDate,
   compact = false,
   plain = false,
+  rangeLabel,
 }: {
   weekStartDate: string;
   /** true のときは見出しと内側のボックスを省き、親のボックスにそのまま本文を並べる（ホーム用） */
   compact?: boolean;
   /** true のときは暗いボックスで囲わず、白い背景に見出しと本文を並べる（予定ページのアコーディオン用） */
   plain?: boolean;
+  /** plain のとき見出しのあとに赤字で添える週の期間（例: 9/28〜10/4） */
+  rangeLabel?: string;
 }) {
   const { user } = useAuth();
   const { text, loading, error, saveSummary } = useWeekSummary(user?.uid, weekStartDate);
@@ -111,7 +114,14 @@ export default function WeekSummaryCard({
     return (
       <div className="flex flex-col">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-gray-500">今週の概要</p>
+          <p className="text-xs font-semibold text-gray-500">
+            今週の概要
+            {rangeLabel && (
+              <>
+                （<span className="font-bold text-red-500">{rangeLabel}</span>）
+              </>
+            )}
+          </p>
           {!editing && editButton}
         </div>
         {body}
