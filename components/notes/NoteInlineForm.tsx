@@ -46,6 +46,8 @@ export default function NoteInlineForm({
     setCategoryId(initialCategoryId);
     setText(initialText);
     setError(null);
+    // フォームは閉じてもアンマウントされないため、前回の保存成功時の saving が残らないよう戻す
+    setSaving(false);
 
     // アコーディオンが展開し終わる頃にフォーカスし、スマホでもキーボードに隠れないようスクロールする
     const timer = setTimeout(() => {
@@ -70,6 +72,7 @@ export default function NoteInlineForm({
     } catch (err) {
       console.error("ノートの保存に失敗しました", err);
       setError("保存に失敗しました。もう一度お試しください。");
+    } finally {
       setSaving(false);
     }
   };
