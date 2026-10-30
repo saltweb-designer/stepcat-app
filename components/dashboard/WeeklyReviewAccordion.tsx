@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWeekSummary } from "@/hooks/useWeekSummary";
@@ -142,14 +141,8 @@ export default function WeeklyReviewAccordion({
               </div>
             </div>
           )}
-          <div className="relative overflow-hidden rounded-2xl bg-gray-800 p-4 text-white shadow-sm sm:p-5">
-            <div className="relative z-10 pr-16 sm:pr-20">
-              <WeekSummaryCard weekStartDate={cells[0].date} />
-            </div>
-            <div className="pointer-events-none absolute -bottom-2 -right-2 h-16 w-20 sm:h-20 sm:w-24">
-              <Image src="/home_ai.png" alt="" fill sizes="96px" className="object-contain object-bottom" />
-            </div>
-          </div>
+          {/* アコーディオンの中では箱を重ねず、入力欄を横いっぱいに使えるようにする */}
+          <WeekSummaryCard weekStartDate={cells[0].date} plain />
           <ActionBalanceCard
             periods={[
               { label: "この週", startDate: cells[0].date, endDate: cells[cells.length - 1].date },
