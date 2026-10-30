@@ -106,7 +106,7 @@ export default function NoteInlineForm({
         ref={textareaRef}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        rows={5}
+        rows={10}
         placeholder="自由にメモを書こう。URLを含めると自動でリンクになるよ..."
         className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
       />
