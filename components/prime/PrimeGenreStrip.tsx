@@ -23,13 +23,12 @@ export default function PrimeGenreStrip({
             type="button"
             onClick={() => onSelect(active ? null : id)}
             aria-pressed={active}
-            className={`flex w-[3.25rem] shrink-0 flex-col items-center gap-1 transition-opacity sm:w-[3.75rem] ${
-              selected && !active ? "opacity-40 hover:opacity-70" : ""
-            }`}
+            className="flex w-[3.25rem] shrink-0 flex-col items-center gap-1 sm:w-[3.75rem]"
           >
+            {/* 選んでいないときは白地にグレーの枠、選んで絞り込んでいるときは黒地に白いアイコンにする */}
             <span
-              className={`flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 text-white sm:h-12 sm:w-12 ${
-                active ? "ring-2 ring-black ring-offset-2 ring-offset-gray-100" : ""
+              className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors sm:h-12 sm:w-12 ${
+                active ? "border-black bg-black text-white" : "border-gray-300 bg-white text-black hover:bg-gray-50"
               }`}
             >
               <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2} />
