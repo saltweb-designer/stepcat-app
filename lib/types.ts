@@ -210,3 +210,21 @@ export interface VideoDoc {
 
 /** ピン留めは入力フォームとは別にカード上で切り替えるので、入力値には含めない */
 export type VideoInput = Omit<VideoDoc, "id" | "pinned">;
+
+/** Firestore の users/{uid}/primeVideos/{id} ドキュメントの形。Amazonプライムビデオの作品へのリンク */
+export interface PrimeVideoDoc {
+  id: string;
+  /** プライムビデオの作品ページの URL。アプリ内では再生せず、押すとアプリ（なければブラウザ）で開く */
+  url: string;
+  /** 作品名。プライムビデオからは自動取得できないので手入力する */
+  title: string;
+  /** 縮小・圧縮した画像の data URL。登録していなければ空文字で、カードは画像なしで表示する */
+  imageDataUrl: string;
+  /** users/{uid}/primeVideoCategories/{id} への参照。空文字、または削除済みカテゴリを指す場合は未分類として扱う */
+  categoryId: string;
+  memo: string;
+  /** ピン留めした作品は一覧の先頭に固定表示する */
+  pinned: boolean;
+}
+
+export type PrimeVideoInput = Omit<PrimeVideoDoc, "id" | "pinned">;

@@ -18,30 +18,12 @@ import { useNoteCategories } from "@/hooks/useNoteCategories";
 import { useVideos, type MediaCollection } from "@/hooks/useVideos";
 import { UNCATEGORIZED_ID } from "@/lib/notes";
 import type { VideoDoc } from "@/lib/types";
+import { shuffleByDay } from "@/lib/shuffle";
 import { toIsoDate } from "@/lib/week";
 
 /** 同じチャンネルの動画をまとめるキー。チャンネルURLが無ければ名前で代用する */
 function channelKeyOf(video: VideoDoc) {
   return video.channelUrl || video.channelName.trim();
-}
-
-/** 文字列から 32bit の数値を作る（FNV-1a）。同じ文字列なら常に同じ値になる */
-function hashString(text: string) {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
-}
-
-/**
- * 日付と動画IDから並び順を決めるシャッフル。同じ日なら開き直しても・別の端末でも同じ順番で、
- * 日付が変わると順番が入れ替わる。動画を追加・削除しても他の動画同士の順番は変わらない
- */
-function shuffleByDay(videos: VideoDoc[], dayKey: string) {
-  const keyById = new Map(videos.map((video) => [video.id, hashString(`${dayKey}:${video.id}`)]));
-  return [...videos].sort((a, b) => keyById.get(a.id)! - keyById.get(b.id)!);
 }
 
 /**

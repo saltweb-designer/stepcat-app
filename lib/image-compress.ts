@@ -22,15 +22,16 @@ function loadImage(file: File): Promise<HTMLImageElement> {
 /**
  * 画像ファイルを縮小・JPEG 圧縮して data URL にする。
  * Firestore に直接保存できるサイズに収まるまで、画質と解像度を段階的に下げる。
+ * maxEdge を小さくすると、サムネイル用にもっと軽くできる
  */
-export async function compressImageToDataUrl(file: File): Promise<string> {
+export async function compressImageToDataUrl(file: File, maxEdge = MAX_EDGE): Promise<string> {
   const img = await loadImage(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("画像を処理できませんでした");
 
-  let edge = MAX_EDGE;
-  while (edge >= 320) {
+  let edge = maxEdge;
+  while (edge >= Math.min(320, maxEdge)) {
     const scale = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
     canvas.width = Math.round(img.naturalWidth * scale);
     canvas.height = Math.round(img.naturalHeight * scale);
