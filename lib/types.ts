@@ -1,3 +1,5 @@
+import type { PrimeGenre } from "@/lib/prime-genres";
+
 export type EntryCategory = "schedule" | "task" | "memo" | "link";
 
 export type LinkItemType = "url" | "map";
@@ -220,6 +222,8 @@ export interface PrimeVideoDoc {
   title: string;
   /** 縮小・圧縮した画像の data URL。登録していなければ空文字で、カードは画像なしで表示する */
   imageDataUrl: string;
+  /** 大カテゴリ（アニメ・ドラマ・映画・リアル・その他）。カテゴリとは別に必ずどれか1つを持つ */
+  genre: PrimeGenre;
   /** users/{uid}/primeVideoCategories/{id} への参照。空文字、または削除済みカテゴリを指す場合は未分類として扱う */
   categoryId: string;
   memo: string;

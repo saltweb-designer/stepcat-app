@@ -9,11 +9,13 @@ import InlineAccordion from "@/components/notes/InlineAccordion";
 import NoteCategoryFilter, { ALL_CATEGORIES } from "@/components/notes/NoteCategoryFilter";
 import NoteCategoryModal from "@/components/notes/NoteCategoryModal";
 import PrimeCard from "@/components/prime/PrimeCard";
+import PrimeGenreStrip from "@/components/prime/PrimeGenreStrip";
 import PrimeInlineForm from "@/components/prime/PrimeInlineForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNoteCategories } from "@/hooks/useNoteCategories";
 import { usePrimeVideos } from "@/hooks/usePrimeVideos";
 import { UNCATEGORIZED_ID } from "@/lib/notes";
+import { primeGenreLabel, type PrimeGenre } from "@/lib/prime-genres";
 import { shuffleByDay } from "@/lib/shuffle";
 import type { PrimeVideoInput } from "@/lib/types";
 import { toIsoDate } from "@/lib/week";
@@ -22,7 +24,8 @@ const TITLE = "アマプラ";
 
 /**
  * Amazonプライムビデオの作品リンクを集めるページ。アプリ内では再生できないので、
- * 小さなリンクカードを並べ、押すとプライムビデオを開く。カテゴリ・検索・ピン留め・シャッフルは動画ページと同じ
+ * 小さなリンクカードを並べ、押すとプライムビデオを開く。カテゴリ・検索・ピン留め・シャッフルは動画ページと同じ。
+ * カテゴリの上に大カテゴリ（アニメ・ドラマなど）の丸いアイコンを置き、大枠でも絞り込めるようにする
  */
 export default function PrimePage() {
   const { user, loading } = useAuth();
@@ -36,6 +39,7 @@ export default function PrimePage() {
     reorderCategories,
   } = useNoteCategories(user?.uid, "primeVideoCategories");
 
+  const [selectedGenre, setSelectedGenre] = useState<PrimeGenre | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -56,28 +60,31 @@ export default function PrimePage() {
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const matched = items.filter((item) => {
+      if (selectedGenre && item.genre !== selectedGenre) return false;
       if (selectedCategory === UNCATEGORIZED_ID) {
         if (item.categoryId && categoryNameById.has(item.categoryId)) return false;
       } else if (selectedCategory !== ALL_CATEGORIES && item.categoryId !== selectedCategory) {
         return false;
       }
       if (!q) return true;
-      const haystack = [item.title, item.memo, categoryNameById.get(item.categoryId) ?? ""].join("\n").toLowerCase();
+      const haystack = [item.title, item.memo, primeGenreLabel(item.genre), categoryNameById.get(item.categoryId) ?? ""].join("\n").toLowerCase();
       return haystack.includes(q);
     });
-    const isAllView = selectedCategory === ALL_CATEGORIES && !q;
+    const isAllView = !selectedGenre && selectedCategory === ALL_CATEGORIES && !q;
     let ordered = matched;
     if (manualShuffleSeed) ordered = shuffleByDay(matched, manualShuffleSeed);
     else if (isAllView) ordered = shuffleByDay(matched, todayKey);
     return ordered.sort((a, b) => Number(b.pinned) - Number(a.pinned));
-  }, [items, selectedCategory, searchQuery, categoryNameById, todayKey, manualShuffleSeed]);
+  }, [items, selectedGenre, selectedCategory, searchQuery, categoryNameById, todayKey, manualShuffleSeed]);
 
   const newItemCategoryId = selectedCategory === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedCategory;
+  // 大カテゴリで絞り込んでいるときは、新規登録の大カテゴリもそれにしておく
+  const newItemGenre = selectedGenre ?? "other";
   const newItem = useMemo<PrimeVideoInput>(
-    () => ({ url: "", title: "", imageDataUrl: "", categoryId: newItemCategoryId, memo: "" }),
-    [newItemCategoryId]
+    () => ({ url: "", title: "", imageDataUrl: "", genre: newItemGenre, categoryId: newItemCategoryId, memo: "" }),
+    [newItemGenre, newItemCategoryId]
   );
-  const isFiltering = selectedCategory !== ALL_CATEGORIES || searchQuery.trim() !== "";
+  const isFiltering = selectedGenre !== null || selectedCategory !== ALL_CATEGORIES || searchQuery.trim() !== "";
 
   const handleCreate = async (input: PrimeVideoInput) => {
     await addItem(input);
@@ -139,6 +146,8 @@ export default function PrimePage() {
                 )}
               </div>
             </div>
+
+            <PrimeGenreStrip selected={selectedGenre} onSelect={setSelectedGenre} />
 
             <NoteCategoryFilter
               categories={categories}

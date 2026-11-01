@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { ImagePlus, Loader2, Tags, X } from "lucide-react";
 import { UNCATEGORIZED_ID } from "@/lib/notes";
+import { PRIME_GENRES } from "@/lib/prime-genres";
 import { compressImageToDataUrl } from "@/lib/image-compress";
 import type { NoteCategoryDoc, PrimeVideoInput } from "@/lib/types";
 
@@ -44,6 +45,7 @@ export default function PrimeInlineForm({
   const [url, setUrl] = useState(initialItem.url);
   const [title, setTitle] = useState(initialItem.title);
   const [imageDataUrl, setImageDataUrl] = useState(initialItem.imageDataUrl);
+  const [genre, setGenre] = useState(initialItem.genre);
   const [categoryId, setCategoryId] = useState(initialItem.categoryId);
   const [memo, setMemo] = useState(initialItem.memo);
   const [compressing, setCompressing] = useState(false);
@@ -65,6 +67,7 @@ export default function PrimeInlineForm({
     setUrl(initialItem.url);
     setTitle(initialItem.title);
     setImageDataUrl(initialItem.imageDataUrl);
+    setGenre(initialItem.genre);
     setCategoryId(initialItem.categoryId);
     setMemo(initialItem.memo);
     setError(null);
@@ -110,6 +113,7 @@ export default function PrimeInlineForm({
         url: trimmedUrl,
         title: title.trim(),
         imageDataUrl,
+        genre,
         categoryId: resolvedCategoryId,
         memo: memo.trim(),
       });
@@ -181,6 +185,27 @@ export default function PrimeInlineForm({
             {imageDataUrl ? "画像を変更" : "画像を追加"}
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-xs font-semibold text-gray-500">大カテゴリ</label>
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="大カテゴリ">
+          {PRIME_GENRES.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={genre === id}
+              onClick={() => setGenre(id)}
+              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                genre === id ? "bg-black text-white" : "border border-gray-300 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 

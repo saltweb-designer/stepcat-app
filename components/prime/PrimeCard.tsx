@@ -5,6 +5,7 @@ import { ExternalLink, Pencil, Pin, Trash2 } from "lucide-react";
 import InlineAccordion from "@/components/notes/InlineAccordion";
 import NoteText from "@/components/notes/NoteText";
 import PrimeInlineForm from "./PrimeInlineForm";
+import { primeGenreLabel } from "@/lib/prime-genres";
 import type { NoteCategoryDoc, PrimeVideoDoc, PrimeVideoInput } from "@/lib/types";
 
 /**
@@ -76,9 +77,14 @@ export default function PrimeCard({
               <span className="line-clamp-2">{item.title || "作品名なし"}</span>
               <ExternalLink className="h-3 w-3 shrink-0 text-gray-400" strokeWidth={2} />
             </p>
-            <span className="mt-0.5 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
-              {categoryName}
-            </span>
+            <div className="mt-0.5 flex flex-wrap gap-1">
+              <span className="inline-flex items-center rounded-full bg-gray-800 px-2 py-0.5 text-[10px] font-semibold text-white">
+                {primeGenreLabel(item.genre)}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
+                {categoryName}
+              </span>
+            </div>
           </div>
         </a>
         {!editing && (

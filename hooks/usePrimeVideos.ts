@@ -13,6 +13,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { toPrimeGenre } from "@/lib/prime-genres";
 import type { PrimeVideoDoc, PrimeVideoInput } from "@/lib/types";
 
 /** アマプラページの作品リンク。users/{uid}/primeVideos に保存し、画像も同じドキュメントに入れる */
@@ -35,6 +36,7 @@ export function usePrimeVideos(uid: string | undefined) {
               url: data.url ?? "",
               title: data.title ?? "",
               imageDataUrl: data.imageDataUrl ?? "",
+              genre: toPrimeGenre(data.genre),
               categoryId: data.categoryId ?? "",
               memo: data.memo ?? "",
               pinned: data.pinned ?? false,
