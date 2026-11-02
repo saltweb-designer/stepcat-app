@@ -28,6 +28,7 @@ function buildSummaryLines(data: WellnessDoc): { label: string; value: string }[
     lines.push({ label, value: data[flagKey] ? data[noteKey] || "あり" : "無し" });
   }
   if (data.waterIntakeMl > 0) lines.push({ label: "水分量", value: `${data.waterIntakeMl}ml` });
+  if (data.dinner) lines.push({ label: "晩御飯", value: data.dinner });
   return lines;
 }
 
@@ -71,7 +72,7 @@ export default function WellnessSection({ date }: { date: string }) {
             <HeartPulse className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" strokeWidth={2} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               {summaryLines.map(({ label, value }) => (
-                <p key={label} className="text-xs text-rose-700">
+                <p key={label} className="whitespace-pre-wrap text-xs text-rose-700">
                   <span className="font-semibold">{label}：</span>
                   {value}
                 </p>

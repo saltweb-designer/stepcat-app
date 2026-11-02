@@ -78,6 +78,8 @@ export interface WellnessDoc {
   waterIntakeMl: number;
   /** 水分補給の保存履歴 */
   waterLog: WaterLogEntry[];
+  /** 晩御飯 */
+  dinner: string;
 }
 
 export const EMPTY_WELLNESS: WellnessDoc = {
@@ -94,6 +96,7 @@ export const EMPTY_WELLNESS: WellnessDoc = {
   conditionChangeNote: "",
   waterIntakeMl: 0,
   waterLog: [],
+  dinner: "",
 };
 
 function isSleepDuration(value: unknown): value is SleepDuration {

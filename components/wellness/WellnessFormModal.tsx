@@ -346,6 +346,20 @@ export default function WellnessFormModal({
               onNoteChange={(v) => update("conditionChangeNote", v)}
               notePlaceholder="体調の変化の詳細を入力..."
             />
+
+            <div>
+              <label htmlFor="wellness-dinner" className="mb-1.5 block text-xs font-semibold text-gray-500">
+                晩御飯
+              </label>
+              <textarea
+                id="wellness-dinner"
+                rows={2}
+                value={form.dinner}
+                onChange={(e) => update("dinner", e.target.value)}
+                placeholder="例：鮭の塩焼き、味噌汁、ごはん"
+                className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
+              />
+            </div>
           </div>
 
           <div className="mt-6 flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
