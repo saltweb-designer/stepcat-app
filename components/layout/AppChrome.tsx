@@ -7,6 +7,9 @@ import BottomNav from "./BottomNav";
 /** ノート・動画・音楽画面では、日記用の新規追加バー（予定・タスク等）を隠す。それぞれの追加ボタンはページ内にある */
 export default function AppChrome() {
   const pathname = usePathname();
+  // 英語添削ページは朝にさっと使うだけなので、入力に集中できるようメニューごと出さない
+  if (pathname === "/en") return null;
+
   const hideAddEntryBar = pathname.startsWith("/notes") || pathname.startsWith("/videos") || pathname.startsWith("/music") || pathname.startsWith("/training") || pathname.startsWith("/prime");
 
   return (

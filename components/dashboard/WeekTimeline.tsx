@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import DayCard from "./DayCard";
 import PastSchedulesAccordion from "./PastSchedulesAccordion";
 import WeekSummaryCard from "./WeekSummaryCard";
@@ -44,7 +45,15 @@ export default function WeekTimeline() {
         </div>
       </div>
 
-      <div className="mb-3">
+      {/* 「en」は朝にさっと英語を添削する専用ページへ。場所を取らないよう新規追加の左隣に小さく置く */}
+      <div className="mb-3 flex items-center justify-end gap-2">
+        <Link
+          href="/en"
+          aria-label="英語の添削"
+          className="flex h-[30px] items-center rounded-full border border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 shadow-sm transition-colors hover:bg-gray-50"
+        >
+          en
+        </Link>
         <AddEntryButton variant="compact" />
       </div>
 
