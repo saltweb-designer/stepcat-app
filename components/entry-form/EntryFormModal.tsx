@@ -24,6 +24,7 @@ export default function EntryFormModal({
   onClose,
   initialEntry,
   initialDate,
+  initialCategory,
   scope = "all",
   occurrenceDate,
 }: {
@@ -32,6 +33,8 @@ export default function EntryFormModal({
   initialEntry?: EntryDoc;
   /** 新規作成時に、開始日・終了日の初期値としてセットする日付（例：日付ストリップからの登録） */
   initialDate?: string;
+  /** 新規作成時のカテゴリの初期値。指定した場合はタイトル欄に自動でフォーカスする（例：日付カードのメモ欄から登録） */
+  initialCategory?: EntryCategory;
   /** 編集モード時、変更を反映する範囲（この日のみ / この日以降 / すべて） */
   scope?: EditScope;
   /** scope が single / following の場合の基準日 */
@@ -40,7 +43,9 @@ export default function EntryFormModal({
   const { user } = useAuth();
   const isEdit = !!initialEntry;
   const effectiveScope: EditScope = occurrenceDate ? scope : "all";
-  const [category, setCategory] = useState<EntryCategory>(initialEntry?.category ?? "schedule");
+  const [category, setCategory] = useState<EntryCategory>(
+    initialEntry?.category ?? initialCategory ?? "schedule"
+  );
   const [startDate, setStartDate] = useState(
     effectiveScope === "all" ? (initialEntry?.startDate ?? initialDate ?? "") : (occurrenceDate ?? "")
   );
@@ -323,6 +328,7 @@ export default function EntryFormModal({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                autoFocus={!isEdit && !!initialCategory}
                 placeholder="例：プロジェクト企画書 提出期限"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
               />
