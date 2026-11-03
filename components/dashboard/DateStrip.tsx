@@ -33,8 +33,9 @@ export default function DateStrip() {
   const datesWithEntries = useMemo(() => getDatesWithEntries(entries), [entries]);
   const [newEntryDate, setNewEntryDate] = useState<string | null>(null);
 
+  /** タップした日のカードへスクロールする。カードが見つからない（読み込み中など）ときだけ追加画面を開く */
   const handleSelect = (date: string) => {
-    if (datesWithEntries.has(date) && scrollToDayCard(date)) return;
+    if (scrollToDayCard(date)) return;
     setNewEntryDate(date);
   };
 
