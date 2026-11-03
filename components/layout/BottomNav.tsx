@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, Dumbbell, Home, MonitorPlay, Music, NotebookPen } from "lucide-react";
@@ -13,8 +14,21 @@ const tabs = [
   { href: "/notes", label: "メモ", icon: NotebookPen },
 ];
 
+/** スクロールしているのはページ全体ではなく layout の枠なので、Next.js の自動スクロールが効かない。自分で先頭へ戻す */
+function scrollRootToTop(behavior: ScrollBehavior) {
+  document.querySelector("[data-scroll-root]")?.scrollTo({ top: 0, behavior });
+}
+
 export default function BottomNav() {
   const pathname = usePathname();
+  /** 別のページへ移るときは、新しいページが描かれてから先頭へ戻す */
+  const scrollAfterNavigate = useRef(false);
+
+  useEffect(() => {
+    if (!scrollAfterNavigate.current) return;
+    scrollAfterNavigate.current = false;
+    scrollRootToTop("auto");
+  }, [pathname]);
 
   return (
     <nav
@@ -27,6 +41,14 @@ export default function BottomNav() {
           <Link
             key={href}
             href={href}
+            onClick={() => {
+              if (isActive && pathname === href) {
+                scrollRootToTop("smooth");
+              } else {
+                scrollAfterNavigate.current = true;
+                scrollRootToTop("auto");
+              }
+            }}
             className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 text-[9px] font-normal text-gray-400 transition-colors hover:text-gray-600"
           >
             {/* 選択中はアイコンだけを赤にし、文字はグレーのままにして圧迫感を抑える */}
