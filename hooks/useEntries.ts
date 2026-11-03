@@ -43,6 +43,7 @@ export function useEntries(uid: string | undefined) {
               completedDates,
               weekdays: Array.isArray(data.weekdays) ? data.weekdays : [],
               excludedDates: Array.isArray(data.excludedDates) ? data.excludedDates : [],
+              autoTitle: data.autoTitle === true,
             } satisfies EntryDoc;
           })
         );

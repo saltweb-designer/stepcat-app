@@ -24,6 +24,8 @@ export interface EntryDoc {
   weekdays: number[];
   /** シリーズから除外した日付（YYYY-MM-DD）。「この日のみ」の編集・削除で使用する */
   excludedDates: string[];
+  /** true の場合、title は内容（detail）からの自動生成。旧データ（タイトルを手入力していたもの）は未設定 */
+  autoTitle?: boolean;
 }
 
 export interface DayEntry {

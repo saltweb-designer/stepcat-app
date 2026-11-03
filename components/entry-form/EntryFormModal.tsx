@@ -13,6 +13,42 @@ import type { EntryCategory, EntryDoc } from "@/lib/types";
 /** 曜日指定で終了日が空欄の場合に繰り返す期間（52週） */
 const DEFAULT_REPEAT_DAYS = 7 * 52 - 1;
 
+/** この文字数以下の1行だけの内容は、要約せずそのままタイトルにする */
+const SHORT_TITLE_LENGTH = 20;
+
+/** 内容の1行目（空行を除く） */
+function firstLine(text: string) {
+  return text.split("\n").map((line) => line.trim()).find((line) => line !== "") ?? "";
+}
+
+/** 編集時の内容の初期値。手入力のタイトルがある旧データは、タイトルが内容に含まれていなければ1行目に足す */
+function initialContent(entry?: EntryDoc) {
+  if (!entry) return "";
+  if (!entry.detail) return entry.title;
+  if (entry.autoTitle || !entry.title || firstLine(entry.detail) === entry.title.trim()) return entry.detail;
+  return `${entry.title}\n${entry.detail}`;
+}
+
+/** 一覧に表示するタイトルを内容から作る。短い1行はそのまま、それ以外はAIで要約する（失敗時は1行目） */
+async function generateTitle(content: string) {
+  const text = content.trim();
+  if (!text) return "";
+  const fallback = firstLine(text).slice(0, 30);
+  if (!text.includes("\n") && text.length <= SHORT_TITLE_LENGTH) return text;
+  try {
+    const res = await fetch("/api/ai-title", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json();
+    return res.ok && typeof data?.title === "string" && data.title ? data.title : fallback;
+  } catch (err) {
+    console.error("タイトルの自動生成に失敗しました", err);
+    return fallback;
+  }
+}
+
 const categories: { value: EntryCategory; label: string; icon: typeof CalendarRange }[] = [
   { value: "schedule", label: "スケジュール", icon: CalendarRange },
   { value: "task", label: "タスク", icon: CheckSquare },
@@ -33,7 +69,7 @@ export default function EntryFormModal({
   initialEntry?: EntryDoc;
   /** 新規作成時に、開始日・終了日の初期値としてセットする日付（例：日付ストリップからの登録） */
   initialDate?: string;
-  /** 新規作成時のカテゴリの初期値。指定した場合はタイトル欄に自動でフォーカスする（例：日付カードのメモ欄から登録） */
+  /** 新規作成時のカテゴリの初期値。指定した場合は内容欄に自動でフォーカスする（例：日付カードのメモ欄から登録） */
   initialCategory?: EntryCategory;
   /** 編集モード時、変更を反映する範囲（この日のみ / この日以降 / すべて） */
   scope?: EditScope;
@@ -58,11 +94,11 @@ export default function EntryFormModal({
   const [allDay, setAllDay] = useState(initialEntry?.allDay ?? true);
   const [startTime, setStartTime] = useState(initialEntry?.startTime ?? "");
   const [endTime, setEndTime] = useState(initialEntry?.endTime ?? "");
-  const [title, setTitle] = useState(initialEntry?.title ?? "");
-  const [detail, setDetail] = useState(initialEntry?.detail ?? "");
+  const [detail, setDetail] = useState(() => initialContent(initialEntry));
   const [link, setLink] = useState(initialEntry?.link ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const canSave = (detail.trim() !== "" || link.trim() !== "") && !saving;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -78,8 +114,7 @@ export default function EntryFormModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle || !user || saving) return;
+    if (!canSave || !user) return;
 
     const resolvedStartDate = startDate || toIsoDate(new Date());
     const resolvedEndDate =
@@ -103,9 +138,11 @@ export default function EntryFormModal({
     setSaving(true);
     setError(null);
     try {
+      const unchanged = isEdit && !!initialEntry?.title && detail.trim() === initialContent(initialEntry).trim();
       const payload: EntryPayload = {
         category,
-        title: trimmedTitle,
+        title: (unchanged && initialEntry ? initialEntry.title : await generateTitle(detail)) || link.trim(),
+        autoTitle: true,
         detail: detail.trim(),
         link: link.trim(),
         startDate: resolvedStartDate,
@@ -159,7 +196,7 @@ export default function EntryFormModal({
             <button
               type="submit"
               form="entry-form"
-              disabled={title.trim() === "" || saving}
+              disabled={!canSave}
               className="rounded-full bg-black px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {saving ? (isEdit ? "更新中..." : "保存中...") : isEdit ? "更新" : "保存"}
@@ -320,30 +357,16 @@ export default function EntryFormModal({
             </div>
 
             <div>
-              <label htmlFor="entry-title" className="mb-1.5 block text-xs font-semibold text-gray-500">
-                タイトル
-              </label>
-              <input
-                id="entry-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                autoFocus={!isEdit && !!initialCategory}
-                placeholder="例：プロジェクト企画書 提出期限"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
-              />
-            </div>
-
-            <div>
               <label htmlFor="entry-detail" className="mb-1.5 block text-xs font-semibold text-gray-500">
-                詳細・メモ
+                内容
               </label>
               <textarea
                 id="entry-detail"
                 value={detail}
                 onChange={(e) => setDetail(e.target.value)}
-                rows={3}
-                placeholder="詳細やメモを入力..."
+                autoFocus={!isEdit && !!initialCategory}
+                rows={4}
+                placeholder="内容を入力...（タイトルは内容から自動で作成されます）"
                 className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
               />
             </div>
@@ -377,7 +400,7 @@ export default function EntryFormModal({
             </button>
             <button
               type="submit"
-              disabled={title.trim() === "" || saving}
+              disabled={!canSave}
               className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {saving ? (isEdit ? "更新中..." : "保存中...") : isEdit ? "更新" : "保存"}
