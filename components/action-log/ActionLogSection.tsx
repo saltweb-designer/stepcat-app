@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { Check, ListChecks, Pencil, Plus, Repeat, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, ListChecks, Pencil, Plus, Repeat, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActionLog } from "@/hooks/useActionLog";
 import { useActionLogSettings } from "@/hooks/useActionLogSettings";
@@ -131,11 +131,15 @@ export default function ActionLogSection({
   const [editing, setEditing] = useState<Editing>(null);
   const [editingDaily, setEditingDaily] = useState(false);
   const [editingPresets, setEditingPresets] = useState(false);
+  /** 不可避は毎日ほぼ同じなので、初期状態では件数だけ見せて中身は畳んでおく */
+  const [unavoidableOpen, setUnavoidableOpen] = useState(false);
   /** 追加後に入力欄を空にして続けて入力できるよう、key を変えて再マウントする */
   const [addInputKey, setAddInputKey] = useState(0);
 
   const startEditing = (origin: ActionOrigin, id: string | null) => {
     setEditing({ origin, id, sheet: inputPlacement === "auto" && isTouchDevice() });
+    // 畳んだままだと追加した項目が見えないため開いておく
+    if (origin === "unavoidable") setUnavoidableOpen(true);
   };
 
   const sheetOrigin = editing?.sheet ? ACTION_ORIGINS.find((o) => o.key === editing.origin) : undefined;
@@ -165,14 +169,34 @@ export default function ActionLogSection({
         const { items, isDaily } = resolveActionItems(data, origin.key, settings, date);
         const isAdding = editing?.origin === origin.key && editing.id === null;
         const isAddingInline = isAdding && !editing.sheet;
+        const collapsible = origin.key === "unavoidable";
+        const showItems = !collapsible || unavoidableOpen;
+        const labelContent = (
+          <>
+            <span className={`h-2 w-2 rounded-full ${origin.dotClass}`} />
+            {origin.label}
+            {items.length > 0 && <span className="font-semibold opacity-70">{items.length}</span>}
+          </>
+        );
         return (
           <div key={origin.key} className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
             <div className="flex items-center justify-between gap-2">
-              <p className={`flex items-center gap-1.5 text-xs font-bold ${origin.textClass}`}>
-                <span className={`h-2 w-2 rounded-full ${origin.dotClass}`} />
-                {origin.label}
-                {items.length > 0 && <span className="font-semibold opacity-70">{items.length}</span>}
-              </p>
+              {collapsible ? (
+                <button
+                  type="button"
+                  onClick={() => setUnavoidableOpen((open) => !open)}
+                  aria-expanded={unavoidableOpen}
+                  className={`flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-bold ${origin.textClass}`}
+                >
+                  {labelContent}
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 opacity-60 transition-transform ${unavoidableOpen ? "rotate-180" : ""}`}
+                    strokeWidth={2.5}
+                  />
+                </button>
+              ) : (
+                <p className={`flex items-center gap-1.5 text-xs font-bold ${origin.textClass}`}>{labelContent}</p>
+              )}
               <div className="flex items-center gap-0.5">
                 {origin.key === "unavoidable" && !editingDaily && (
                   <button
@@ -223,7 +247,7 @@ export default function ActionLogSection({
               />
             )}
 
-            {items.length > 0 && (
+            {showItems && items.length > 0 && (
               <ul className="mt-1.5 flex flex-col gap-1">
                 {items.map((item) =>
                   !editing?.sheet && editing?.origin === origin.key && editing.id === item.id ? (

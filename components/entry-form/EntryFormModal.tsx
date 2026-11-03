@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CalendarRange, CheckSquare, Link2, NotebookText, X } from "lucide-react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -99,6 +99,29 @@ export default function EntryFormModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canSave = (detail.trim() !== "" || link.trim() !== "") && !saving;
+  const formRef = useRef<HTMLFormElement>(null);
+  const detailSectionRef = useRef<HTMLDivElement>(null);
+  /** 日付カードのメモ欄から開いたときは、すぐ書けるよう内容欄をフォームの一番上に出す */
+  const scrollToDetail = !isEdit && initialCategory === "memo";
+
+  useEffect(() => {
+    if (!scrollToDetail) return;
+    const align = () => {
+      const form = formRef.current;
+      const section = detailSectionRef.current;
+      if (!form || !section) return;
+      form.scrollTop = section.getBoundingClientRect().top - form.getBoundingClientRect().top + form.scrollTop - 16;
+    };
+    align();
+    // キーボードが出るとブラウザが位置を動かすことがあるため、表示領域が変わったら合わせ直す
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", align);
+    const timer = window.setTimeout(align, 350);
+    return () => {
+      viewport?.removeEventListener("resize", align);
+      window.clearTimeout(timer);
+    };
+  }, [scrollToDetail]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -212,7 +235,7 @@ export default function EntryFormModal({
           </div>
         </header>
 
-        <form id="entry-form" onSubmit={handleSubmit} className="flex-1 overflow-x-hidden overflow-y-auto px-5 py-4">
+        <form ref={formRef} id="entry-form" onSubmit={handleSubmit} className="flex-1 overflow-x-hidden overflow-y-auto px-5 py-4">
           <div className="flex flex-col gap-5">
             <div>
               <label className="mb-2 block text-xs font-semibold text-gray-500">カテゴリ</label>
@@ -356,7 +379,7 @@ export default function EntryFormModal({
               )}
             </div>
 
-            <div>
+            <div ref={detailSectionRef}>
               <label htmlFor="entry-detail" className="mb-1.5 block text-xs font-semibold text-gray-500">
                 内容
               </label>
@@ -406,6 +429,8 @@ export default function EntryFormModal({
               {saving ? (isEdit ? "更新中..." : "保存中...") : isEdit ? "更新" : "保存"}
             </button>
           </div>
+          {/* 内容欄を一番上までスクロールできるよう、下に余白を足す */}
+          {scrollToDetail && <div aria-hidden className="h-[60vh]" />}
         </form>
       </div>
     </div>
