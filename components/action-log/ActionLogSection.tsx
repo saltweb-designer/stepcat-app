@@ -172,34 +172,39 @@ export default function ActionLogSection({
     const isAdding = editing?.origin === origin.key && editing.id === null;
     const isAddingInline = isAdding && !editing.sheet;
     const isOpen = openOrigins[origin.key];
+    /** 他人起点と不可避は2カラムで幅が狭いので、スマホではボタンをアイコンだけにして1行に収める */
+    const narrow = origin.key !== "self";
+    const actionButtonClass = `flex items-center gap-0.5 rounded-full py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass} ${
+      narrow ? "h-6 min-w-6 justify-center px-1 sm:px-2" : "px-2"
+    }`;
+    const actionText = (text: string) => (narrow ? <span className="hidden sm:inline">{text}</span> : text);
     return (
-      <div key={origin.key} className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
-        <div className="flex items-center justify-between gap-2">
+      <div key={origin.key} className={`rounded-xl py-2 ${narrow ? "px-2.5 sm:px-3" : "px-3"} ${origin.boxClass}`}>
+        <div className="flex items-center justify-between gap-1">
           <button
             type="button"
             onClick={() => toggleOpen(origin.key)}
             aria-expanded={isOpen}
-            className={`flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-bold ${origin.textClass}`}
+            className={`flex min-w-0 flex-1 items-center gap-1 whitespace-nowrap text-left text-xs font-bold sm:gap-1.5 ${origin.textClass}`}
           >
-            <span className={`h-2 w-2 rounded-full ${origin.dotClass}`} />
+            <span className={`h-2 w-2 shrink-0 rounded-full ${origin.dotClass}`} />
             {origin.label}
             {items.length > 0 && <span className="font-semibold opacity-70">{items.length}</span>}
             <ChevronDown
-              className={`h-3.5 w-3.5 opacity-60 transition-transform ${isOpen ? "rotate-180" : ""}`}
+              className={`h-3.5 w-3.5 shrink-0 opacity-60 transition-transform ${isOpen ? "rotate-180" : ""}`}
               strokeWidth={2.5}
             />
           </button>
-          <div className="flex items-center gap-0.5">
+          <div className="flex shrink-0 items-center gap-0.5">
             {origin.key === "unavoidable" && !editingDaily && (
               <button
                 type="button"
                 onClick={() => setEditingDaily(true)}
                 aria-label="毎日の設定"
-                className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
+                className={actionButtonClass}
               >
                 <Repeat className="h-3 w-3" strokeWidth={2.5} />
-                {/* 2カラムで幅が狭いスマホでは文字を省いてアイコンだけにする */}
-                <span className="hidden sm:inline">毎日の設定</span>
+                {actionText("毎日の設定")}
               </button>
             )}
             {origin.key === "self" && !editingPresets && (
@@ -216,10 +221,11 @@ export default function ActionLogSection({
               <button
                 type="button"
                 onClick={() => startEditing(origin.key, null)}
-                className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
+                aria-label="追加"
+                className={actionButtonClass}
               >
                 <Plus className="h-3 w-3" strokeWidth={2.5} />
-                追加
+                {actionText("追加")}
               </button>
             )}
           </div>
