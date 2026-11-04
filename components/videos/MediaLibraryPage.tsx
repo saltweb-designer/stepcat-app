@@ -20,6 +20,7 @@ import { UNCATEGORIZED_ID } from "@/lib/notes";
 import type { VideoDoc } from "@/lib/types";
 import { shuffleByDay } from "@/lib/shuffle";
 import { toIsoDate } from "@/lib/week";
+import { parseYouTubeUrl } from "@/lib/youtube";
 
 /** 同じチャンネルの動画をまとめるキー。チャンネルURLが無ければ名前で代用する */
 function channelKeyOf(video: VideoDoc) {
@@ -74,6 +75,24 @@ export default function MediaLibraryPage({
     for (const category of categories) map.set(category.id, category.name);
     return map;
   }, [categories]);
+
+  // 登録済みの YouTube 動画ID → その動画のドキュメントID。URLの書き方が違っても同じ動画なら重複とみなす
+  const docIdByYouTubeId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const video of videos) {
+      const youTubeId = parseYouTubeUrl(video.url)?.id;
+      if (youTubeId) map.set(youTubeId, video.id);
+    }
+    return map;
+  }, [videos]);
+
+  /** excludeId（編集中の動画自身）以外に、同じ動画が登録されているか */
+  const isDuplicateUrl = (url: string, excludeId?: string) => {
+    const youTubeId = parseYouTubeUrl(url)?.id;
+    if (!youTubeId) return false;
+    const docId = docIdByYouTubeId.get(youTubeId);
+    return docId !== undefined && docId !== excludeId;
+  };
 
   const categoryNameFor = (categoryId: string) => categoryNameById.get(categoryId) ?? "未分類";
 
@@ -219,6 +238,7 @@ export default function MediaLibraryPage({
               initialCategoryId={newVideoCategoryId}
               onCreate={addVideo}
               onManageCategories={() => setCategoryModalOpen(true)}
+              isDuplicateUrl={isDuplicateUrl}
             />
 
             {filteredVideos.length === 0 ? (
@@ -238,6 +258,7 @@ export default function MediaLibraryPage({
                     onTogglePin={() => setVideoPinned(video.id, !video.pinned)}
                     onManageCategories={() => setCategoryModalOpen(true)}
                     itemLabel={title}
+                    isDuplicateUrl={(url) => isDuplicateUrl(url, video.id)}
                   />
                 ))}
                 {remainingCount > 0 && (

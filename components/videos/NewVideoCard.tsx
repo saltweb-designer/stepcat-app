@@ -15,6 +15,7 @@ export default function NewVideoCard({
   initialCategoryId,
   onCreate,
   onManageCategories,
+  isDuplicateUrl,
 }: {
   open: boolean;
   onClose: () => void;
@@ -22,6 +23,7 @@ export default function NewVideoCard({
   initialCategoryId: string;
   onCreate: (input: VideoInput) => Promise<void>;
   onManageCategories: () => void;
+  isDuplicateUrl: (url: string) => boolean;
 }) {
   const initialVideo = useMemo<VideoInput>(
     () => ({ url: "", title: "", channelName: "", channelUrl: "", channelIconUrl: "", categoryId: initialCategoryId, memo: "" }),
@@ -47,6 +49,7 @@ export default function NewVideoCard({
             onCancel={onClose}
             onManageCategories={onManageCategories}
             submitLabel="追加"
+            isDuplicateUrl={isDuplicateUrl}
           />
         </div>
       </InlineAccordion>

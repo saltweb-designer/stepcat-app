@@ -25,6 +25,7 @@ export default function VideoInlineForm({
   onCancel,
   onManageCategories,
   submitLabel,
+  isDuplicateUrl,
 }: {
   /** 親のアコーディオンが開いているかどうか。true になったタイミングでのみ初期化・フォーカスする */
   active: boolean;
@@ -35,6 +36,8 @@ export default function VideoInlineForm({
   onCancel: () => void;
   onManageCategories: () => void;
   submitLabel: string;
+  /** 同じ動画がすでに登録されているか。true なら「重複動画」と表示して保存できないようにする */
+  isDuplicateUrl?: (url: string) => boolean;
 }) {
   const [url, setUrl] = useState(initialVideo.url);
   const [meta, setMeta] = useState<VideoMeta>(initialVideo);
@@ -117,12 +120,13 @@ export default function VideoInlineForm({
 
   const trimmedUrl = url.trim();
   const isValidUrl = parseYouTubeUrl(trimmedUrl) !== null;
+  const isDuplicate = isValidUrl && (isDuplicateUrl?.(trimmedUrl) ?? false);
   const resolvedCategoryId =
     categoryId !== UNCATEGORIZED_ID && !categories.some((c) => c.id === categoryId) ? UNCATEGORIZED_ID : categoryId;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!isValidUrl || saving) return;
+    if (!isValidUrl || isDuplicate || saving) return;
 
     setSaving(true);
     setError(null);
@@ -160,6 +164,7 @@ export default function VideoInlineForm({
         {trimmedUrl !== "" && !isValidUrl && (
           <p className="mt-1 text-[11px] font-medium text-rose-500">YouTube の動画URLを入力してください</p>
         )}
+        {isDuplicate && <p className="mt-1 text-[11px] font-medium text-rose-500">重複動画</p>}
         {meta.title && isValidUrl && <p className="mt-1.5 line-clamp-2 text-xs text-gray-500">{meta.title}</p>}
       </div>
 
@@ -230,7 +235,7 @@ export default function VideoInlineForm({
         </button>
         <button
           type="submit"
-          disabled={!isValidUrl || saving}
+          disabled={!isValidUrl || isDuplicate || saving}
           className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           {saving ? "保存中..." : submitLabel}

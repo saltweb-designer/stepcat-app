@@ -19,6 +19,7 @@ export default function VideoCard({
   onTogglePin,
   onManageCategories,
   itemLabel = "動画",
+  isDuplicateUrl,
 }: {
   video: VideoDoc;
   categoryName: string;
@@ -29,6 +30,8 @@ export default function VideoCard({
   onManageCategories: () => void;
   /** 削除確認メッセージに使う呼び名（動画・音楽） */
   itemLabel?: string;
+  /** この動画以外に同じ動画が登録されているか */
+  isDuplicateUrl?: (url: string) => boolean;
 }) {
   const [editing, setEditing] = useState(false);
   // 編集フォームは一度開くまで作らない。全カードが見えないフォームを持つと、件数が多いときにスクロールが重くなる。
@@ -126,6 +129,7 @@ export default function VideoCard({
             onCancel={() => setEditing(false)}
             onManageCategories={onManageCategories}
             submitLabel="更新"
+            isDuplicateUrl={isDuplicateUrl}
           />
         </InlineAccordion>
       )}
