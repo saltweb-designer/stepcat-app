@@ -34,6 +34,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // 16px未満の入力欄を選んだときにiPhoneが画面を勝手に拡大するのを防ぐ（iPhoneではピンチでの拡大はこれまでどおりできる）
+  maximumScale: 1,
   viewportFit: "cover",
 };
 
