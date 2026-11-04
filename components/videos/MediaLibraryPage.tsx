@@ -26,6 +26,9 @@ function channelKeyOf(video: VideoDoc) {
   return video.channelUrl || video.channelName.trim();
 }
 
+/** 一度に表示するカードの件数。残りは「続きを見る」で同じ件数ずつ増やし、件数が多くても画面を軽く保つ */
+const PAGE_SIZE = 10;
+
 /**
  * 動画ページ・音楽ページ共通の画面。見た目と機能は同じで、
  * 保存先のコレクション（登録したもの・カテゴリ）はページごとに完全に分ける
@@ -118,8 +121,19 @@ export default function MediaLibraryPage({
     return ordered.sort((a, b) => Number(b.pinned) - Number(a.pinned));
   }, [videos, selectedCategory, activeChannel, searchQuery, categoryNameById, shuffleDaily, todayKey, manualShuffleSeed]);
 
+  // 表示件数。絞り込み・検索・シャッフルを変えたら最初の件数に戻す
+  const listKey = [selectedCategory, activeChannel ?? "", searchQuery.trim(), manualShuffleSeed ?? ""].join("\n");
+  const [paging, setPaging] = useState({ key: listKey, count: PAGE_SIZE });
+  const pagedCount = paging.key === listKey ? paging.count : PAGE_SIZE;
+  // 再生中の動画が後ろのほうにあっても、そのカードまでは表示しておく（別のページから戻ったときにカードへ戻れるように）
+  const playingIndex = nowPlaying ? filteredVideos.findIndex((video) => video.id === nowPlaying.item.id) : -1;
+  const visibleCount = Math.max(pagedCount, Math.ceil((playingIndex + 1) / PAGE_SIZE) * PAGE_SIZE);
+  const visibleVideos = filteredVideos.slice(0, visibleCount);
+  const remainingCount = filteredVideos.length - visibleVideos.length;
+  const showMore = () => setPaging({ key: listKey, count: visibleCount + PAGE_SIZE });
+
   // 絞り込みでカードが消えたときは、プレーヤー側が右下に小さく出るので、こちらのボタンは隠す
-  const playingVideo = nowPlaying ? filteredVideos.find((video) => video.id === nowPlaying.item.id) : undefined;
+  const playingVideo = nowPlaying ? visibleVideos.find((video) => video.id === nowPlaying.item.id) : undefined;
 
   const newVideoCategoryId = selectedCategory === ALL_CATEGORIES ? UNCATEGORIZED_ID : selectedCategory;
   const isFiltering = selectedCategory !== ALL_CATEGORIES || activeChannel !== null || searchQuery.trim() !== "";
@@ -213,7 +227,7 @@ export default function MediaLibraryPage({
               </p>
             ) : (
               <div className="flex flex-col gap-3">
-                {filteredVideos.map((video) => (
+                {visibleVideos.map((video) => (
                   <VideoCard
                     key={video.id}
                     video={video}
@@ -226,6 +240,15 @@ export default function MediaLibraryPage({
                     itemLabel={title}
                   />
                 ))}
+                {remainingCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={showMore}
+                    className="mx-auto mt-1 rounded-full bg-white px-5 py-2 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:text-gray-900"
+                  >
+                    続きを見る（残り{remainingCount}件）
+                  </button>
+                )}
               </div>
             )}
           </>

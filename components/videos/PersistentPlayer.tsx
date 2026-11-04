@@ -28,9 +28,10 @@ export default function PersistentPlayer() {
   const itemId = current?.item.id;
   const videoId = current?.embed.id;
 
-  // カードの枠の位置を追いかける。スクロール・開閉アニメーション・画面回転のどれでもずれないようにする。
-  // カードに重ねている間は毎フレーム、右下に小さく出している間は間隔をあけて確認する。
-  // 位置は transform で動かし（再レイアウトが起きず軽い）、値が変わったときだけ書き換える
+  // カードの枠の位置を追いかける。開閉アニメーション・画面回転などでずれないようにする。
+  // プレーヤーはスクロール枠の中に置いてあるので、カードに重ねている間はカードと一緒にブラウザがスクロールさせる
+  // （JS で毎フレーム動かすと指の動きから1フレーム遅れ、再生中のスクロールがカクつく）。
+  // カードに重ねている間は毎フレーム、右下に小さく出している間は間隔をあけて確認し、値が変わったときだけ書き換える
   useEffect(() => {
     if (!itemId) return;
     let frame = 0;
@@ -62,15 +63,20 @@ export default function PersistentPlayer() {
             pendingJumpRef.current = false;
             currentSlot.closest("[data-video-id]")?.scrollIntoView({ block: "start" });
           }
+          // スクロール枠の中での位置（スクロール量を足した値）に置く。スクロールしてもこの値は変わらないので、
+          // 書き換えは開閉アニメーションや画面回転のときだけで済み、スクロール自体はブラウザに任せられる
           const rect = currentSlot.getBoundingClientRect();
-          apply(box, `slot:${rect.left},${rect.top},${rect.width},${rect.height}`, {
-            left: "0px",
-            top: "0px",
+          const rootRect = root.getBoundingClientRect();
+          const left = rect.left - rootRect.left + root.scrollLeft;
+          const top = rect.top - rootRect.top + root.scrollTop;
+          apply(box, `slot:${left},${top},${rect.width},${rect.height}`, {
+            position: "absolute",
+            left: `${left}px`,
+            top: `${top}px`,
             right: "auto",
             bottom: "auto",
             width: `${rect.width}px`,
             height: `${rect.height}px`,
-            transform: `translate3d(${rect.left}px, ${rect.top}px, 0)`,
           });
         } else {
           const rootRect = root.getBoundingClientRect();
@@ -78,13 +84,13 @@ export default function PersistentPlayer() {
           const right = window.innerWidth - rootRect.right + MINI_MARGIN;
           const bottom = window.innerHeight - rootRect.bottom + MINI_MARGIN;
           apply(box, `mini:${width},${right},${bottom}`, {
+            position: "fixed",
             left: "auto",
             top: "auto",
             width: `${width}px`,
             height: "auto",
             right: `${right}px`,
             bottom: `${bottom}px`,
-            transform: "none",
           });
         }
         box.style.visibility = "visible";

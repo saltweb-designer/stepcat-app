@@ -23,6 +23,8 @@ export default function ChannelAvatar({
           src={iconUrl}
           alt=""
           referrerPolicy="no-referrer"
+          loading="lazy"
+          decoding="async"
           onError={() => setFailedUrl(iconUrl)}
           className="absolute inset-0 h-full w-full object-cover"
         />

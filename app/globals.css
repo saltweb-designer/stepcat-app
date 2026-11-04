@@ -40,17 +40,3 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   margin-inline-start: 4px;
   border-radius: 9999px;
 }
-
-/*
- * 動画・音楽・筋トレのカード。画面から外れたカードは描画を省き、件数が多くてもスクロールを軽く保つ。
- * auto を付けると一度描いた実際の高さを覚えるので、スクロール位置がずれない
- */
-.media-card {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 360px;
-}
-
-/* 再生中のカードはプレーヤーが位置を追いかけるので、常に描画しておく */
-.media-card:has([data-player-slot]) {
-  content-visibility: visible;
-}

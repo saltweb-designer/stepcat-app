@@ -52,8 +52,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AuthProvider>
           {/* 動画・音楽・筋トレのプレーヤーはページの外に置き、別のページへ移動しても再生を続ける */}
           <MediaPlayerProvider>
-            <div data-scroll-root className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
-            <PersistentPlayer />
+            {/* プレーヤーはスクロール枠の中に置き、カードに重ねている間はカードと一緒にスクロールさせる */}
+            <div data-scroll-root className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {children}
+              <PersistentPlayer />
+            </div>
             <AppChrome />
           </MediaPlayerProvider>
         </AuthProvider>

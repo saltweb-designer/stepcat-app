@@ -63,7 +63,7 @@ export default function VideoCard({
   };
 
   return (
-    <div data-video-id={video.id} className="media-card flex min-w-0 scroll-my-20 flex-col rounded-2xl border border-gray-200/70 bg-white p-3 shadow-sm sm:p-4">
+    <div data-video-id={video.id} className="flex min-w-0 scroll-my-20 flex-col rounded-2xl border border-gray-200/70 bg-white p-3 shadow-sm sm:p-4">
       {embed && <PlayerSlot item={video} embed={embed} />}
 
       <div className="mt-2.5 flex items-start gap-2.5">
