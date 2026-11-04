@@ -31,6 +31,9 @@ export default function VideoCard({
   itemLabel?: string;
 }) {
   const [editing, setEditing] = useState(false);
+  // 編集フォームは一度開くまで作らない。全カードが見えないフォームを持つと、件数が多いときにスクロールが重くなる。
+  // 一度開いた後は閉じるアニメーションのために残しておく
+  const [formMounted, setFormMounted] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const embed = parseYouTubeUrl(video.url);
 
@@ -60,7 +63,7 @@ export default function VideoCard({
   };
 
   return (
-    <div data-video-id={video.id} className="flex min-w-0 scroll-my-20 flex-col rounded-2xl border border-gray-200/70 bg-white p-3 shadow-sm sm:p-4">
+    <div data-video-id={video.id} className="media-card flex min-w-0 scroll-my-20 flex-col rounded-2xl border border-gray-200/70 bg-white p-3 shadow-sm sm:p-4">
       {embed && <PlayerSlot item={video} embed={embed} />}
 
       <div className="mt-2.5 flex items-start gap-2.5">
@@ -89,7 +92,10 @@ export default function VideoCard({
             </button>
             <button
               type="button"
-              onClick={() => setEditing(true)}
+              onClick={() => {
+                setFormMounted(true);
+                setEditing(true);
+              }}
               className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
               aria-label="編集"
             >
@@ -110,17 +116,19 @@ export default function VideoCard({
 
       {!editing && video.memo && <NoteText text={video.memo} className="mt-2 text-sm text-gray-700" />}
 
-      <InlineAccordion open={editing}>
-        <VideoInlineForm
-          active={editing}
-          initialVideo={video}
-          categories={categories}
-          onSave={handleSave}
-          onCancel={() => setEditing(false)}
-          onManageCategories={onManageCategories}
-          submitLabel="更新"
-        />
-      </InlineAccordion>
+      {formMounted && (
+        <InlineAccordion open={editing}>
+          <VideoInlineForm
+            active={editing}
+            initialVideo={video}
+            categories={categories}
+            onSave={handleSave}
+            onCancel={() => setEditing(false)}
+            onManageCategories={onManageCategories}
+            submitLabel="更新"
+          />
+        </InlineAccordion>
+      )}
     </div>
   );
 }

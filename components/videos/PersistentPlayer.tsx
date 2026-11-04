@@ -28,47 +28,80 @@ export default function PersistentPlayer() {
   const itemId = current?.item.id;
   const videoId = current?.embed.id;
 
-  // カードの枠の位置を毎フレーム追いかける。スクロール・開閉アニメーション・画面回転のどれでもずれないようにする
+  // カードの枠の位置を追いかける。スクロール・開閉アニメーション・画面回転のどれでもずれないようにする。
+  // カードに重ねている間は毎フレーム、右下に小さく出している間は間隔をあけて確認する。
+  // 位置は transform で動かし（再レイアウトが起きず軽い）、値が変わったときだけ書き換える
   useEffect(() => {
     if (!itemId) return;
     let frame = 0;
+    let timer = 0;
+    let slot: HTMLElement | null = null;
+    let root: Element | null = null;
+    let lastStyle = "";
+    let lastMini: boolean | null = null;
+
+    const findSlot = () => {
+      if (slot?.isConnected && slot.dataset.playerSlot === itemId) return slot;
+      slot = document.querySelector<HTMLElement>(`[data-player-slot="${itemId}"]`);
+      return slot;
+    };
+
+    const apply = (box: HTMLElement, key: string, style: Partial<CSSStyleDeclaration>) => {
+      if (key === lastStyle) return;
+      lastStyle = key;
+      Object.assign(box.style, style);
+    };
+
     const update = () => {
       const box = boxRef.current;
-      const root = document.querySelector("[data-scroll-root]");
+      if (!root?.isConnected) root = document.querySelector("[data-scroll-root]");
+      const currentSlot = findSlot();
       if (box && root) {
-        const slot = document.querySelector<HTMLElement>(`[data-player-slot="${itemId}"]`);
-        if (slot) {
+        if (currentSlot) {
           if (pendingJumpRef.current) {
             pendingJumpRef.current = false;
-            slot.closest("[data-video-id]")?.scrollIntoView({ block: "start" });
+            currentSlot.closest("[data-video-id]")?.scrollIntoView({ block: "start" });
           }
-          const rect = slot.getBoundingClientRect();
-          Object.assign(box.style, {
-            left: `${rect.left}px`,
-            top: `${rect.top}px`,
-            width: `${rect.width}px`,
-            height: `${rect.height}px`,
+          const rect = currentSlot.getBoundingClientRect();
+          apply(box, `slot:${rect.left},${rect.top},${rect.width},${rect.height}`, {
+            left: "0px",
+            top: "0px",
             right: "auto",
             bottom: "auto",
+            width: `${rect.width}px`,
+            height: `${rect.height}px`,
+            transform: `translate3d(${rect.left}px, ${rect.top}px, 0)`,
           });
         } else {
           const rootRect = root.getBoundingClientRect();
-          Object.assign(box.style, {
+          const width = Math.min(MINI_WIDTH, rootRect.width - MINI_MARGIN * 2);
+          const right = window.innerWidth - rootRect.right + MINI_MARGIN;
+          const bottom = window.innerHeight - rootRect.bottom + MINI_MARGIN;
+          apply(box, `mini:${width},${right},${bottom}`, {
             left: "auto",
             top: "auto",
-            width: `${Math.min(MINI_WIDTH, rootRect.width - MINI_MARGIN * 2)}px`,
+            width: `${width}px`,
             height: "auto",
-            right: `${window.innerWidth - rootRect.right + MINI_MARGIN}px`,
-            bottom: `${window.innerHeight - rootRect.bottom + MINI_MARGIN}px`,
+            right: `${right}px`,
+            bottom: `${bottom}px`,
+            transform: "none",
           });
         }
         box.style.visibility = "visible";
-        setMini(!slot);
+        const nextMini = !currentSlot;
+        if (nextMini !== lastMini) {
+          lastMini = nextMini;
+          setMini(nextMini);
+        }
       }
-      frame = requestAnimationFrame(update);
+      if (currentSlot) frame = requestAnimationFrame(update);
+      else timer = window.setTimeout(update, 200);
     };
     update();
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
   }, [itemId]);
 
   // プレーヤーから届く再生状態を受け取る。動画を直接タップして再生・停止した場合もここで分かる。

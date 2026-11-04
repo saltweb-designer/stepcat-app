@@ -51,7 +51,7 @@ export default function NowPlayingButton({
   // スクロール枠の下端に貼り付ける。高さ0の帯の中に置き、一覧の操作を邪魔しない
   return (
     <div className="pointer-events-none sticky bottom-0 z-20 mx-auto h-0 max-w-2xl">
-      <div className="pointer-events-auto absolute bottom-4 right-4 flex items-center gap-1 rounded-full bg-gray-900/90 p-1 text-xs font-semibold text-white shadow-lg backdrop-blur sm:right-6">
+      <div className="pointer-events-auto absolute bottom-4 right-4 flex items-center gap-1 rounded-full bg-gray-900/95 p-1 text-xs font-semibold text-white shadow-lg sm:right-6">
         {direction && (
           <button
             type="button"
