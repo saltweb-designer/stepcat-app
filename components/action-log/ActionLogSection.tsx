@@ -131,15 +131,20 @@ export default function ActionLogSection({
   const [editing, setEditing] = useState<Editing>(null);
   const [editingDaily, setEditingDaily] = useState(false);
   const [editingPresets, setEditingPresets] = useState(false);
-  /** 不可避は毎日ほぼ同じなので、初期状態では件数だけ見せて中身は畳んでおく */
-  const [unavoidableOpen, setUnavoidableOpen] = useState(false);
+  /** 初期状態では件数だけ見せて中身は畳んでおく */
+  const [openOrigins, setOpenOrigins] = useState<Record<ActionOrigin, boolean>>({
+    self: false,
+    others: false,
+    unavoidable: false,
+  });
+  const toggleOpen = (origin: ActionOrigin) => setOpenOrigins((prev) => ({ ...prev, [origin]: !prev[origin] }));
   /** 追加後に入力欄を空にして続けて入力できるよう、key を変えて再マウントする */
   const [addInputKey, setAddInputKey] = useState(0);
 
   const startEditing = (origin: ActionOrigin, id: string | null) => {
     setEditing({ origin, id, sheet: inputPlacement === "auto" && isTouchDevice() });
     // 畳んだままだと追加した項目が見えないため開いておく
-    if (origin === "unavoidable") setUnavoidableOpen(true);
+    setOpenOrigins((prev) => ({ ...prev, [origin]: true }));
   };
 
   const sheetOrigin = editing?.sheet ? ACTION_ORIGINS.find((o) => o.key === editing.origin) : undefined;
@@ -162,161 +167,159 @@ export default function ActionLogSection({
     }
   };
 
-  return (
-    <div className="mb-3 flex flex-col gap-1.5">
-      {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
-      {ACTION_ORIGINS.map((origin) => {
-        const { items, isDaily } = resolveActionItems(data, origin.key, settings, date);
-        const isAdding = editing?.origin === origin.key && editing.id === null;
-        const isAddingInline = isAdding && !editing.sheet;
-        const collapsible = origin.key === "unavoidable";
-        const showItems = !collapsible || unavoidableOpen;
-        const labelContent = (
-          <>
+  const renderOrigin = (origin: (typeof ACTION_ORIGINS)[number]) => {
+    const { items, isDaily } = resolveActionItems(data, origin.key, settings, date);
+    const isAdding = editing?.origin === origin.key && editing.id === null;
+    const isAddingInline = isAdding && !editing.sheet;
+    const isOpen = openOrigins[origin.key];
+    return (
+      <div key={origin.key} className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => toggleOpen(origin.key)}
+            aria-expanded={isOpen}
+            className={`flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-bold ${origin.textClass}`}
+          >
             <span className={`h-2 w-2 rounded-full ${origin.dotClass}`} />
             {origin.label}
             {items.length > 0 && <span className="font-semibold opacity-70">{items.length}</span>}
-          </>
-        );
-        return (
-          <div key={origin.key} className={`rounded-xl px-3 py-2 ${origin.boxClass}`}>
-            <div className="flex items-center justify-between gap-2">
-              {collapsible ? (
-                <button
-                  type="button"
-                  onClick={() => setUnavoidableOpen((open) => !open)}
-                  aria-expanded={unavoidableOpen}
-                  className={`flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-bold ${origin.textClass}`}
-                >
-                  {labelContent}
-                  <ChevronDown
-                    className={`h-3.5 w-3.5 opacity-60 transition-transform ${unavoidableOpen ? "rotate-180" : ""}`}
-                    strokeWidth={2.5}
-                  />
-                </button>
-              ) : (
-                <p className={`flex items-center gap-1.5 text-xs font-bold ${origin.textClass}`}>{labelContent}</p>
-              )}
-              <div className="flex items-center gap-0.5">
-                {origin.key === "unavoidable" && !editingDaily && (
-                  <button
-                    type="button"
-                    onClick={() => setEditingDaily(true)}
-                    className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
-                  >
-                    <Repeat className="h-3 w-3" strokeWidth={2.5} />
-                    毎日の設定
-                  </button>
-                )}
-                {origin.key === "self" && !editingPresets && (
-                  <button
-                    type="button"
-                    onClick={() => setEditingPresets(true)}
-                    className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
-                  >
-                    <ListChecks className="h-3 w-3" strokeWidth={2.5} />
-                    よく使う項目
-                  </button>
-                )}
-                {!isAdding && (
-                  <button
-                    type="button"
-                    onClick={() => startEditing(origin.key, null)}
-                    className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
-                  >
-                    <Plus className="h-3 w-3" strokeWidth={2.5} />
-                    追加
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {origin.key === "unavoidable" && editingDaily && (
-              <DailyUnavoidableEditor
-                initialItems={settings?.dailyUnavoidable ?? []}
-                onSave={saveDailyUnavoidable}
-                onClose={() => setEditingDaily(false)}
-              />
+            <ChevronDown
+              className={`h-3.5 w-3.5 opacity-60 transition-transform ${isOpen ? "rotate-180" : ""}`}
+              strokeWidth={2.5}
+            />
+          </button>
+          <div className="flex items-center gap-0.5">
+            {origin.key === "unavoidable" && !editingDaily && (
+              <button
+                type="button"
+                onClick={() => setEditingDaily(true)}
+                aria-label="毎日の設定"
+                className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
+              >
+                <Repeat className="h-3 w-3" strokeWidth={2.5} />
+                {/* 2カラムで幅が狭いスマホでは文字を省いてアイコンだけにする */}
+                <span className="hidden sm:inline">毎日の設定</span>
+              </button>
             )}
-
-            {origin.key === "self" && editingPresets && (
-              <SelfPresetEditor
-                initialItems={settings?.selfPresets ?? DEFAULT_SELF_PRESETS}
-                onSave={saveSelfPresets}
-                onClose={() => setEditingPresets(false)}
-              />
+            {origin.key === "self" && !editingPresets && (
+              <button
+                type="button"
+                onClick={() => setEditingPresets(true)}
+                className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
+              >
+                <ListChecks className="h-3 w-3" strokeWidth={2.5} />
+                よく使う項目
+              </button>
             )}
-
-            {showItems && items.length > 0 && (
-              <ul className="mt-1.5 flex flex-col gap-1">
-                {items.map((item) =>
-                  !editing?.sheet && editing?.origin === origin.key && editing.id === item.id ? (
-                    <li key={item.id}>
-                      <ItemInput
-                        initialText={item.text}
-                        placeholder={origin.placeholder}
-                        presets={presetsFor(origin.key)}
-                        onSubmit={async (text) => {
-                          await updateItem(origin.key, item.id, text);
-                          setEditing(null);
-                        }}
-                        onCancel={() => setEditing(null)}
-                      />
-                    </li>
-                  ) : (
-                    <li
-                      key={item.id}
-                      className="flex items-start gap-1 rounded-lg bg-white/80 px-2.5 py-1.5"
-                    >
-                      <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-sm text-gray-700">
-                        {item.text}
-                        {isDaily && (
-                          <span className="ml-1.5 inline-block rounded-full bg-slate-100 px-1.5 py-px align-middle text-[10px] font-semibold text-slate-500">
-                            毎日
-                          </span>
-                        )}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => startEditing(origin.key, item.id)}
-                        aria-label="編集"
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                      >
-                        <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(origin.key, item)}
-                        aria-label="削除"
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-rose-600"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
-                      </button>
-                    </li>
-                  )
-                )}
-              </ul>
-            )}
-
-            {isAddingInline && (
-              <div className="mt-1.5">
-                <ItemInput
-                  key={addInputKey}
-                  initialText=""
-                  placeholder={origin.placeholder}
-                  presets={presetsFor(origin.key)}
-                  addedTexts={items.map((item) => item.text)}
-                  onSubmit={async (text) => {
-                    await addItem(origin.key, text);
-                    setAddInputKey((k) => k + 1);
-                  }}
-                  onCancel={() => setEditing(null)}
-                />
-              </div>
+            {!isAdding && (
+              <button
+                type="button"
+                onClick={() => startEditing(origin.key, null)}
+                className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors hover:bg-white/70 ${origin.textClass}`}
+              >
+                <Plus className="h-3 w-3" strokeWidth={2.5} />
+                追加
+              </button>
             )}
           </div>
-        );
-      })}
+        </div>
+
+        {origin.key === "unavoidable" && editingDaily && (
+          <DailyUnavoidableEditor
+            initialItems={settings?.dailyUnavoidable ?? []}
+            onSave={saveDailyUnavoidable}
+            onClose={() => setEditingDaily(false)}
+          />
+        )}
+
+        {origin.key === "self" && editingPresets && (
+          <SelfPresetEditor
+            initialItems={settings?.selfPresets ?? DEFAULT_SELF_PRESETS}
+            onSave={saveSelfPresets}
+            onClose={() => setEditingPresets(false)}
+          />
+        )}
+
+        {isOpen && items.length > 0 && (
+          <ul className="mt-1.5 flex flex-col gap-1">
+            {items.map((item) =>
+              !editing?.sheet && editing?.origin === origin.key && editing.id === item.id ? (
+                <li key={item.id}>
+                  <ItemInput
+                    initialText={item.text}
+                    placeholder={origin.placeholder}
+                    presets={presetsFor(origin.key)}
+                    onSubmit={async (text) => {
+                      await updateItem(origin.key, item.id, text);
+                      setEditing(null);
+                    }}
+                    onCancel={() => setEditing(null)}
+                  />
+                </li>
+              ) : (
+                <li
+                  key={item.id}
+                  className="flex items-start gap-1 rounded-lg bg-white/80 px-2.5 py-1.5"
+                >
+                  <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-sm text-gray-700">
+                    {item.text}
+                    {isDaily && (
+                      <span className="ml-1.5 inline-block rounded-full bg-slate-100 px-1.5 py-px align-middle text-[10px] font-semibold text-slate-500">
+                        毎日
+                      </span>
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => startEditing(origin.key, item.id)}
+                    aria-label="編集"
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                  >
+                    <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(origin.key, item)}
+                    aria-label="削除"
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-rose-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                  </button>
+                </li>
+              )
+            )}
+          </ul>
+        )}
+
+        {isAddingInline && (
+          <div className="mt-1.5">
+            <ItemInput
+              key={addInputKey}
+              initialText=""
+              placeholder={origin.placeholder}
+              presets={presetsFor(origin.key)}
+              addedTexts={items.map((item) => item.text)}
+              onSubmit={async (text) => {
+                await addItem(origin.key, text);
+                setAddInputKey((k) => k + 1);
+              }}
+              onCancel={() => setEditing(null)}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="mb-3 flex flex-col gap-1.5">
+      {error && <p className="text-xs font-semibold text-rose-500">{error}</p>}
+      {renderOrigin(ACTION_ORIGINS[0])}
+      {/* 他人起点と不可避は縦に場所を取らないよう横に並べる */}
+      <div className="grid grid-cols-2 items-start gap-1.5">
+        {ACTION_ORIGINS.slice(1).map(renderOrigin)}
+      </div>
 
       {sheetOrigin && editing && (editing.id === null || sheetItem) && (
         <ActionItemSheet

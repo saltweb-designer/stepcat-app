@@ -42,6 +42,7 @@ function MonthNav({
   onPrev,
   onNext,
   onLabelClick,
+  showThisWeekBadge = false,
   compact = false,
 }: {
   className?: string;
@@ -49,6 +50,8 @@ function MonthNav({
   onPrev: () => void;
   onNext: () => void;
   onLabelClick?: () => void;
+  /** 当月の表示中だけ「今週チェック」の印を出し、押すと今週の欄へ移動できることを知らせる */
+  showThisWeekBadge?: boolean;
   compact?: boolean;
 }) {
   const arrowClassName = `flex items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-200 ${
@@ -67,9 +70,14 @@ function MonthNav({
           type="button"
           onClick={onLabelClick}
           title="今週へ移動"
-          className={`${labelClassName} rounded-full px-3 py-0.5 transition-colors hover:bg-gray-200`}
+          className={`${labelClassName} flex items-center gap-1.5 rounded-full px-3 py-0.5 transition-colors hover:bg-gray-200`}
         >
           {label}
+          {showThisWeekBadge && (
+            <span className="rounded-full bg-rose-500 px-1.5 py-px text-[10px] font-bold leading-4 text-white">
+              今週チェック
+            </span>
+          )}
         </button>
       ) : (
         <p className={`${labelClassName} px-3`}>{label}</p>
@@ -177,6 +185,7 @@ export default function CalendarPage() {
               onPrev={goToPrevMonth}
               onNext={goToNextMonth}
               onLabelClick={goToCurrentWeek}
+              showThisWeekBadge={viewYear === today.getFullYear() && viewMonth === today.getMonth() + 1}
             />
 
             <MonthGoalCard monthKey={viewMonthKey} monthLabel={`${viewYear}年${viewMonth}月`} />
