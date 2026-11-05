@@ -16,7 +16,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const MODEL_NAME = "gemini-2.5-flash-lite";
 
-type Mode = "generate" | "correct";
+type Mode = "generate" | "correct" | "word";
 
 // 英語添削ページ（app/en/page.tsx）用のシステムプロンプト
 // ------------------------------------------------------------------
@@ -86,6 +86,49 @@ const correctResponseSchema = {
   required: ["evaluation", "corrected", "explanation"],
 };
 
+// 英単語ページ（app/word/page.tsx）用。日本語・英語のどちらが来ても、英単語とその日本語の意味を返す
+const WORD_SYSTEM_INSTRUCTION = `
+あなたは日本人の英語学習者向けの英和・和英辞書です。ユーザーが入力した単語（または短い語句）を調べてください。
+
+- 入力が英語の場合（英→日）: その英単語の意味を調べ、品詞ごとに主な日本語の意味を返してください（最大3件）。
+- 入力が日本語の場合（日→英）: その日本語に当たる英単語の候補を、よく使う順に返してください（最大3件）。
+　ニュアンスの違いがわかるよう、meaning には日本語の意味と簡単な使い分けを書いてください。
+
+direction には、英→日なら "en-ja"、日→英なら "ja-en" を入れてください。
+各候補（entries）には次の情報を入れてください。
+- word: 英単語（英→日の場合は入力された単語の原形）
+- pronunciation: 発音記号（IPA）
+- partOfSpeech: 品詞（日本語。例：名詞、動詞、形容詞）
+- meaning: 日本語の意味（簡潔に）
+- example: その意味で使う短い英語の例文（中学〜高校レベル）
+- exampleJa: 例文の日本語訳
+
+【重要】いかなる場合も、必ず純粋なJSON形式のみで出力すること。\`\`\`json などのマークダウン記法や、前置き・後書きのテキストは一切含めないこと。
+`.trim();
+
+const wordResponseSchema = {
+  type: Type.OBJECT,
+  properties: {
+    direction: { type: Type.STRING, enum: ["en-ja", "ja-en"], description: "調べた方向" },
+    entries: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          word: { type: Type.STRING, description: "英単語" },
+          pronunciation: { type: Type.STRING, description: "発音記号（IPA）" },
+          partOfSpeech: { type: Type.STRING, description: "品詞（日本語）" },
+          meaning: { type: Type.STRING, description: "日本語の意味" },
+          example: { type: Type.STRING, description: "英語の例文" },
+          exampleJa: { type: Type.STRING, description: "例文の日本語訳" },
+        },
+        required: ["word", "pronunciation", "partOfSpeech", "meaning", "example", "exampleJa"],
+      },
+    },
+  },
+  required: ["direction", "entries"],
+};
+
 // Gemini が ```json ... ``` のようなマークダウンや前置き・後書きのテキストを
 // 混ぜて返してきた場合に備え、JSON.parse できる形に整形する
 function extractJson(rawText: string): string {
@@ -115,7 +158,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const mode: Mode = body?.mode === "correct" ? "correct" : "generate";
+    const mode: Mode = body?.mode === "correct" || body?.mode === "word" ? body.mode : "generate";
     const text: string = body?.text;
 
     if (!text || typeof text !== "string") {
@@ -125,9 +168,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const systemInstruction =
-      mode === "correct" ? CORRECT_SYSTEM_INSTRUCTION : GENERATE_SYSTEM_INSTRUCTION;
-    const responseSchema = mode === "correct" ? correctResponseSchema : generateResponseSchema;
+    const { systemInstruction, responseSchema } =
+      mode === "correct"
+        ? { systemInstruction: CORRECT_SYSTEM_INSTRUCTION, responseSchema: correctResponseSchema }
+        : mode === "word"
+          ? { systemInstruction: WORD_SYSTEM_INSTRUCTION, responseSchema: wordResponseSchema }
+          : { systemInstruction: GENERATE_SYSTEM_INSTRUCTION, responseSchema: generateResponseSchema };
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
@@ -141,7 +187,8 @@ export async function POST(req: NextRequest) {
         systemInstruction,
         responseMimeType: "application/json",
         responseSchema,
-        temperature: 0.8,
+        // 辞書引きは毎回ぶれないよう低めにする
+        temperature: mode === "word" ? 0.2 : 0.8,
       },
     });
 

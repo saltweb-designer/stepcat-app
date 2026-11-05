@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Copy, Loader2, Sparkles, X } from "lucide-react";
 import LoginPrompt from "@/components/auth/LoginPrompt";
+import WordSearch from "@/components/english/WordSearch";
 import { useAuth } from "@/contexts/AuthContext";
 
 // AI への問い合わせ本体（システムプロンプト・レスポンス整形）は app/api/ai-phrase/route.ts 側にある
@@ -164,6 +165,14 @@ export default function EnglishPage() {
                 <ResultSection label="解説・変更点" text={result.explanation} />
               </div>
             )}
+
+            {/* フレーズを考えている途中でも単語をさっと引けるよう、英単語ページと同じ検索をここにも置く */}
+            <section aria-labelledby="en-word-search-heading" className="mt-4 flex flex-col gap-3 border-t border-gray-200 pt-6">
+              <h2 id="en-word-search-heading" className="px-1 text-sm font-bold text-gray-900">
+                英単語を調べる
+              </h2>
+              <WordSearch />
+            </section>
           </>
         )}
       </main>
