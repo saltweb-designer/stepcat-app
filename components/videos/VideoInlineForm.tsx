@@ -46,6 +46,9 @@ export default function VideoInlineForm({
   const [fetchingMeta, setFetchingMeta] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 保存ボタンを押したURL。保存するとすぐ一覧に反映されるため、フォームが閉じるまでの間に
+  // 今登録した動画自身を「重複」と判定しないよう、このURLは重複チェックから外す
+  const [submittedUrl, setSubmittedUrl] = useState<string | null>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const wasActiveRef = useRef(false);
   const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -65,6 +68,7 @@ export default function VideoInlineForm({
     setCategoryId(initialVideo.categoryId);
     setMemo(initialVideo.memo);
     setError(null);
+    setSubmittedUrl(null);
 
     const timer = setTimeout(() => {
       urlInputRef.current?.focus();
@@ -108,6 +112,7 @@ export default function VideoInlineForm({
   // URL の入力が落ち着いたら、動画タイトルとチャンネル情報を自動取得する
   const handleUrlChange = (value: string) => {
     setUrl(value);
+    setSubmittedUrl(null);
     if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
     const trimmed = value.trim();
     if (!parseYouTubeUrl(trimmed)) {
@@ -120,7 +125,8 @@ export default function VideoInlineForm({
 
   const trimmedUrl = url.trim();
   const isValidUrl = parseYouTubeUrl(trimmedUrl) !== null;
-  const isDuplicate = isValidUrl && (isDuplicateUrl?.(trimmedUrl) ?? false);
+  const isDuplicate =
+    isValidUrl && trimmedUrl !== submittedUrl && (isDuplicateUrl?.(trimmedUrl) ?? false);
   const resolvedCategoryId =
     categoryId !== UNCATEGORIZED_ID && !categories.some((c) => c.id === categoryId) ? UNCATEGORIZED_ID : categoryId;
 
@@ -129,6 +135,7 @@ export default function VideoInlineForm({
     if (!isValidUrl || isDuplicate || saving) return;
 
     setSaving(true);
+    setSubmittedUrl(trimmedUrl);
     setError(null);
     try {
       await onSave({
@@ -144,6 +151,7 @@ export default function VideoInlineForm({
     } catch (err) {
       console.error("動画の保存に失敗しました", err);
       setError("保存に失敗しました。もう一度お試しください。");
+      setSubmittedUrl(null);
       setSaving(false);
     }
   };
