@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
   updateDoc,
+  where,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { NoteDoc } from "@/lib/types";
@@ -90,9 +92,16 @@ export function useNotes(uid: string | undefined) {
     await updateDoc(doc(db, "users", uid, "notes", id), { pinned });
   };
 
+  /** ノートに紐づく画像（noteImages）もまとめて削除する */
   const deleteNote = async (id: string) => {
     if (!uid) return;
-    await deleteDoc(doc(db, "users", uid, "notes", id));
+    const images = await getDocs(
+      query(collection(db, "users", uid, "noteImages"), where("noteId", "==", id))
+    );
+    const batch = writeBatch(db);
+    images.forEach((imageDoc) => batch.delete(imageDoc.ref));
+    batch.delete(doc(db, "users", uid, "notes", id));
+    await batch.commit();
   };
 
   return uid

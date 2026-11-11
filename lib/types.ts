@@ -139,6 +139,17 @@ export interface DayPhotoDoc {
   createdAtMs: number;
 }
 
+/** Firestore の users/{uid}/noteImages/{id} ドキュメントの形。1枚ごとに1ドキュメント（ノート本文の1MB上限を圧迫しないため） */
+export interface NoteImageDoc {
+  id: string;
+  /** NoteDoc.id への参照 */
+  noteId: string;
+  /** 圧縮済み JPEG の data URL */
+  dataUrl: string;
+  /** 並び順用の作成時刻（ミリ秒） */
+  createdAtMs: number;
+}
+
 /** Firestore の users/{uid}/noteCategories/{id} ドキュメントの形 */
 export interface NoteCategoryDoc {
   id: string;

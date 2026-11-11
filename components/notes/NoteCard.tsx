@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Copy, Pencil, Pin, Trash2 } from "lucide-react";
 import InlineAccordion from "./InlineAccordion";
 import NoteInlineForm from "./NoteInlineForm";
+import NoteImages from "./NoteImages";
 import NoteText from "./NoteText";
 import type { NoteCategoryDoc, NoteDoc } from "@/lib/types";
 
@@ -117,6 +118,7 @@ export default function NoteCard({
       </div>
 
       {!editing && <NoteText text={note.text} className="mt-2 text-gray-700" />}
+      {!editing && <NoteImages noteId={note.id} />}
 
       <InlineAccordion open={editing}>
         <NoteInlineForm
