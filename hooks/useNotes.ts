@@ -57,14 +57,16 @@ export function useNotes(uid: string | undefined) {
     return unsubscribe;
   }, [uid]);
 
-  const addNote = async (categoryId: string, text: string) => {
+  /** 作成したノートの ID を返す（続けて画像を紐づけるため） */
+  const addNote = async (categoryId: string, text: string): Promise<string | undefined> => {
     if (!uid) return;
-    await addDoc(collection(db, "users", uid, "notes"), {
+    const ref = await addDoc(collection(db, "users", uid, "notes"), {
       categoryId,
       text,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
+    return ref.id;
   };
 
   const updateNote = async (id: string, categoryId: string, text: string) => {
@@ -110,7 +112,7 @@ export function useNotes(uid: string | undefined) {
         notes: [],
         loading: false,
         error: null,
-        addNote: async () => {},
+        addNote: async () => undefined,
         updateNote: async () => {},
         duplicateNote: async () => {},
         setNotePinned: async () => {},

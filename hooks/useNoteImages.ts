@@ -16,6 +16,18 @@ import { db } from "@/lib/firebase";
 import { compressImageToDataUrl } from "@/lib/image-compress";
 import type { NoteImageDoc } from "@/lib/types";
 
+/** 画像を圧縮してノートに紐づけて保存する。新規ノート作成直後にも使う */
+export async function addNoteImages(uid: string, noteId: string, files: File[]) {
+  for (const file of files) {
+    const dataUrl = await compressImageToDataUrl(file);
+    await addDoc(collection(db, "users", uid, "noteImages"), {
+      noteId,
+      dataUrl,
+      createdAt: serverTimestamp(),
+    });
+  }
+}
+
 export function useNoteImages(uid: string | undefined, noteId: string) {
   const [images, setImages] = useState<NoteImageDoc[]>([]);
 
@@ -48,14 +60,7 @@ export function useNoteImages(uid: string | undefined, noteId: string) {
 
   const addImages = async (files: File[]) => {
     if (!uid) return;
-    for (const file of files) {
-      const dataUrl = await compressImageToDataUrl(file);
-      await addDoc(collection(db, "users", uid, "noteImages"), {
-        noteId,
-        dataUrl,
-        createdAt: serverTimestamp(),
-      });
-    }
+    await addNoteImages(uid, noteId, files);
   };
 
   const deleteImage = async (id: string) => {

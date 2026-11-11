@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Tags } from "lucide-react";
+import PendingImagePicker, { revokePendingImages, type PendingImage } from "./PendingImagePicker";
 import { UNCATEGORIZED_ID } from "@/lib/notes";
 import type { NoteCategoryDoc } from "@/lib/types";
 
@@ -14,6 +15,7 @@ export default function NoteInlineForm({
   onCancel,
   onManageCategories,
   submitLabel,
+  withImages = false,
 }: {
   /** 親のアコーディオンが開いているかどうか。true になったタイミングでのみフォーカス・スクロールする */
   active: boolean;
@@ -21,13 +23,16 @@ export default function NoteInlineForm({
   initialText: string;
   categories: NoteCategoryDoc[];
   /** 呼び出し側で保存処理と、成功時にアコーディオンを閉じる処理まで担う */
-  onSave: (categoryId: string, text: string) => Promise<void>;
+  onSave: (categoryId: string, text: string, images: File[]) => Promise<void>;
   onCancel: () => void;
   onManageCategories: () => void;
   submitLabel: string;
+  /** true のとき、入力欄の下に「画像を追加」を出す（新規作成用。保存は onSave に渡した画像で呼び出し側が行う） */
+  withImages?: boolean;
 }) {
   const [categoryId, setCategoryId] = useState(initialCategoryId);
   const [text, setText] = useState(initialText);
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -45,6 +50,11 @@ export default function NoteInlineForm({
 
     setCategoryId(initialCategoryId);
     setText(initialText);
+    // 前回選んだ画像（保存済み・キャンセル済み）の一時 URL を解放して空にする
+    setPendingImages((prev) => {
+      revokePendingImages(prev);
+      return [];
+    });
     setError(null);
     // フォームは閉じてもアンマウントされないため、前回の保存成功時の saving が残らないよう戻す
     setSaving(false);
@@ -68,7 +78,11 @@ export default function NoteInlineForm({
     setSaving(true);
     setError(null);
     try {
-      await onSave(resolvedCategoryId, trimmed);
+      await onSave(
+        resolvedCategoryId,
+        trimmed,
+        pendingImages.map((image) => image.file)
+      );
     } catch (err) {
       console.error("ノートの保存に失敗しました", err);
       setError("保存に失敗しました。もう一度お試しください。");
@@ -113,6 +127,10 @@ export default function NoteInlineForm({
         placeholder="自由にメモを書こう。URLを含めると自動でリンクになるよ..."
         className="max-h-[60svh] w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
       />
+
+      {withImages && (
+        <PendingImagePicker images={pendingImages} onChange={setPendingImages} disabled={saving} />
+      )}
 
       <div className="flex items-center justify-end gap-2">
         {error && <p className="mr-auto text-xs font-medium text-rose-600">{error}</p>}

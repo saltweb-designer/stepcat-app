@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import InlineAccordion from "./InlineAccordion";
 import NoteInlineForm from "./NoteInlineForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { addNoteImages } from "@/hooks/useNoteImages";
 import type { NoteCategoryDoc } from "@/lib/types";
 
 export default function NewNoteCard({
@@ -14,13 +16,24 @@ export default function NewNoteCard({
 }: {
   categories: NoteCategoryDoc[];
   initialCategoryId: string;
-  onCreate: (categoryId: string, text: string) => Promise<void>;
+  /** 作成したノートの ID を返す（選んだ画像をそのノートに紐づけるため） */
+  onCreate: (categoryId: string, text: string) => Promise<string | undefined>;
   onManageCategories: () => void;
 }) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
-  const handleSave = async (categoryId: string, text: string) => {
-    await onCreate(categoryId, text);
+  const handleSave = async (categoryId: string, text: string, images: File[]) => {
+    const noteId = await onCreate(categoryId, text);
+    // ノート本文は保存済みなので、画像の保存に失敗してもフォームは閉じる（再送でノートが二重にできないように）
+    if (noteId && user && images.length > 0) {
+      try {
+        await addNoteImages(user.uid, noteId, images);
+      } catch (err) {
+        console.error("画像の保存に失敗しました", err);
+        window.alert("ノートは保存しましたが、画像の保存に失敗しました。カードの「画像を追加」から追加し直してください。");
+      }
+    }
     setOpen(false);
   };
 
@@ -49,6 +62,7 @@ export default function NewNoteCard({
           onCancel={() => setOpen(false)}
           onManageCategories={onManageCategories}
           submitLabel="追加"
+          withImages
         />
       </InlineAccordion>
     </div>
