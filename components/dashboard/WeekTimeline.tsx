@@ -45,7 +45,7 @@ export default function WeekTimeline() {
         </div>
       </div>
 
-      {/* 「en」は朝にさっと英語を添削する専用ページへ、「英単語」は単語の意味を調べる専用ページへ。場所を取らないよう新規追加の左隣に小さく置く */}
+      {/* 「en」は朝にさっと英語を添削する専用ページへ、「AI」はボディーメイク・食事をさっと聞くページへ、「英単語」は単語の意味を調べる専用ページへ。場所を取らないよう新規追加の左隣に小さく置く */}
       <div className="mb-3 flex items-center justify-end gap-2">
         <Link
           href="/en"
@@ -53,6 +53,13 @@ export default function WeekTimeline() {
           className="flex h-[30px] items-center rounded-full border border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 shadow-sm transition-colors hover:bg-gray-50"
         >
           en
+        </Link>
+        <Link
+          href="/ai"
+          aria-label="ボディーメイク・食事についてAIに聞く"
+          className="flex h-[30px] items-center rounded-full border border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 shadow-sm transition-colors hover:bg-gray-50"
+        >
+          AI
         </Link>
         <Link
           href="/word"
