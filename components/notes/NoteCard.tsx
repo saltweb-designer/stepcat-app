@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Pencil, Pin, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Copy, CopyPlus, Pencil, Pin, Trash2 } from "lucide-react";
 import InlineAccordion from "./InlineAccordion";
 import NoteInlineForm from "./NoteInlineForm";
 import NoteImages from "./NoteImages";
@@ -30,6 +30,25 @@ export default function NoteCard({
   const [editing, setEditing] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    };
+  }, []);
+
+  const handleCopyText = async () => {
+    try {
+      await navigator.clipboard.writeText(note.text);
+      setCopied(true);
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      console.error("テキストのコピーに失敗しました", err);
+    }
+  };
 
   const handleDuplicate = async () => {
     if (duplicating) return;
@@ -97,12 +116,28 @@ export default function NoteCard({
             </button>
             <button
               type="button"
+              onClick={handleCopyText}
+              className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-gray-100 ${
+                copied ? "text-emerald-500" : "text-gray-400 hover:text-gray-700"
+              }`}
+              aria-label={copied ? "コピーしました" : "テキストをコピー"}
+              title={copied ? "コピーしました" : "テキストをコピー"}
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+              ) : (
+                <Copy className="h-3.5 w-3.5" strokeWidth={2} />
+              )}
+            </button>
+            <button
+              type="button"
               onClick={handleDuplicate}
               disabled={duplicating}
               className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
               aria-label="複製"
+              title="複製"
             >
-              <Copy className="h-3.5 w-3.5" strokeWidth={2} />
+              <CopyPlus className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
             <button
               type="button"
