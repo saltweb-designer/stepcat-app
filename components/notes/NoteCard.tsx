@@ -6,6 +6,7 @@ import InlineAccordion from "./InlineAccordion";
 import NoteInlineForm from "./NoteInlineForm";
 import NoteImages from "./NoteImages";
 import NoteText from "./NoteText";
+import { toggleChecklistLine } from "@/lib/notes";
 import type { NoteCategoryDoc, NoteDoc } from "@/lib/types";
 
 export default function NoteCard({
@@ -13,6 +14,7 @@ export default function NoteCard({
   categoryName,
   categories,
   onSave,
+  onToggleCheck,
   onDuplicate,
   onTogglePin,
   onDelete,
@@ -22,6 +24,8 @@ export default function NoteCard({
   categoryName: string;
   categories: NoteCategoryDoc[];
   onSave: (categoryId: string, text: string) => Promise<void>;
+  /** チェックリスト項目のチェック切り替え後の本文を保存する */
+  onToggleCheck: (text: string) => Promise<void>;
   onDuplicate: () => Promise<void>;
   onTogglePin: () => Promise<void>;
   onDelete: () => Promise<void>;
@@ -79,6 +83,14 @@ export default function NoteCard({
     } catch (err) {
       console.error("ノートの削除に失敗しました", err);
       setDeleting(false);
+    }
+  };
+
+  const handleToggleCheck = async (lineIndex: number) => {
+    try {
+      await onToggleCheck(toggleChecklistLine(note.text, lineIndex));
+    } catch (err) {
+      console.error("チェックの切り替えに失敗しました", err);
     }
   };
 
@@ -152,7 +164,7 @@ export default function NoteCard({
         )}
       </div>
 
-      {!editing && <NoteText text={note.text} className="mt-2 text-gray-700" />}
+      {!editing && <NoteText text={note.text} className="mt-2 text-gray-700" onToggleCheck={handleToggleCheck} />}
       {!editing && <NoteImages noteId={note.id} />}
 
       <InlineAccordion open={editing}>

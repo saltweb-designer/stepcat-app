@@ -88,6 +88,12 @@ export function useNotes(uid: string | undefined) {
     });
   };
 
+  /** チェックリストのチェック切り替え用。updatedAt を変えず、チェックするたびに並び順が動かないようにする */
+  const setNoteText = async (id: string, text: string) => {
+    if (!uid) return;
+    await updateDoc(doc(db, "users", uid, "notes", id), { text });
+  };
+
   /** ピン留めの切り替えでは updatedAt を変えず、一覧の並び順（更新順）を崩さない */
   const setNotePinned = async (id: string, pinned: boolean) => {
     if (!uid) return;
@@ -107,13 +113,14 @@ export function useNotes(uid: string | undefined) {
   };
 
   return uid
-    ? { notes, loading, error, addNote, updateNote, duplicateNote, setNotePinned, deleteNote }
+    ? { notes, loading, error, addNote, updateNote, setNoteText, duplicateNote, setNotePinned, deleteNote }
     : {
         notes: [],
         loading: false,
         error: null,
         addNote: async () => undefined,
         updateNote: async () => {},
+        setNoteText: async () => {},
         duplicateNote: async () => {},
         setNotePinned: async () => {},
         deleteNote: async () => {},

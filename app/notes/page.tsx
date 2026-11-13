@@ -21,6 +21,7 @@ export default function NotesPage() {
     error: notesError,
     addNote,
     updateNote,
+    setNoteText,
     duplicateNote,
     setNotePinned,
     deleteNote,
@@ -135,6 +136,7 @@ export default function NotesPage() {
                     categoryName={categoryNameFor(note.categoryId)}
                     categories={categories}
                     onSave={(categoryId, text) => updateNote(note.id, categoryId, text)}
+                    onToggleCheck={(text) => setNoteText(note.id, text)}
                     onDuplicate={() => duplicateNote(note)}
                     onTogglePin={() => setNotePinned(note.id, !note.pinned)}
                     onDelete={() => deleteNote(note.id)}

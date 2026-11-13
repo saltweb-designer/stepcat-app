@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Tags } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { ListChecks, Tags } from "lucide-react";
 import PendingImagePicker, { revokePendingImages, type PendingImage } from "./PendingImagePicker";
-import { UNCATEGORIZED_ID } from "@/lib/notes";
+import { continueChecklistOnEnter, toggleChecklistPrefix, UNCATEGORIZED_ID } from "@/lib/notes";
 import type { NoteCategoryDoc } from "@/lib/types";
 
 export default function NoteInlineForm({
@@ -70,6 +70,37 @@ export default function NoteInlineForm({
   const resolvedCategoryId =
     categoryId !== UNCATEGORIZED_ID && !categories.some((c) => c.id === categoryId) ? UNCATEGORIZED_ID : categoryId;
 
+  /** 本文を書き換えたあと、指定位置にカーソルを戻す */
+  const applyText = (next: string, selStart: number, selEnd = selStart) => {
+    setText(next);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(selStart, selEnd);
+    });
+  };
+
+  /** カーソルのある行（選択中は選択範囲の行すべて）をチェック項目にする／戻す */
+  const handleToggleChecklist = () => {
+    const el = textareaRef.current;
+    const start = el?.selectionStart ?? text.length;
+    const end = el?.selectionEnd ?? text.length;
+    const result = toggleChecklistPrefix(text, start, end);
+    applyText(result.text, result.start, result.end);
+  };
+
+  /** チェック項目の行で改行したら、次の行にもチェックボックスを付ける（日本語変換の確定 Enter は除く） */
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing || e.keyCode === 229) return;
+    const el = e.currentTarget;
+    if (el.selectionStart !== el.selectionEnd) return;
+    const result = continueChecklistOnEnter(text, el.selectionStart);
+    if (!result) return;
+    e.preventDefault();
+    applyText(result.text, result.cursor);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const trimmed = text.trim();
@@ -119,12 +150,27 @@ export default function NoteInlineForm({
         </select>
       </div>
 
+      <div className="-mb-1 flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-500">本文</span>
+        <button
+          type="button"
+          // ボタンを押してもテキスト欄のカーソル位置（フォーカス）を失わないようにする
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={handleToggleChecklist}
+          className="flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-semibold text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800"
+        >
+          <ListChecks className="h-3.5 w-3.5" strokeWidth={2} />
+          チェックリスト
+        </button>
+      </div>
+
       <textarea
         ref={textareaRef}
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={handleKeyDown}
         rows={16}
-        placeholder="自由にメモを書こう。URLを含めると自動でリンクになるよ..."
+        placeholder="自由にメモを書こう。URLを含めると自動でリンクになるよ。「チェックリスト」でチェックできる箇条書きも作れるよ..."
         className="max-h-[60svh] w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20"
       />
 
