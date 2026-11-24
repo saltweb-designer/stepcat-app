@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type PointerEvent } from "react";
+import { ArrowDownUp } from "lucide-react";
 import ChannelAvatar from "./ChannelAvatar";
 
 /** スマホ・iPad（タッチ操作の端末）で最初に表示するチャンネル数。残りは「続き」で表示する */
@@ -141,9 +142,12 @@ export default function ChannelStrip({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className={`${textButtonClassName} flex text-gray-500 hover:text-gray-700`}
+          className="group flex w-[3.25rem] shrink-0 flex-col items-center gap-1 sm:w-[3.75rem]"
         >
-          並び替え
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-gray-600 shadow-sm transition-colors group-hover:text-gray-900 sm:h-12 sm:w-12">
+            <ArrowDownUp className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="w-full truncate text-center text-[9px] font-medium text-gray-600">並び替え</span>
         </button>
       )}
       {channels.map((channel, index) => {
