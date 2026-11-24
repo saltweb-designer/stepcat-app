@@ -136,6 +136,16 @@ export default function ChannelStrip({
 
   return (
     <div className="-mx-4 flex gap-3 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
+      {channels.length > 1 && (
+        // 先頭に置いて、スマホ・iPad でもいつでも押せるようにする
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className={`${textButtonClassName} flex text-gray-500 hover:text-gray-700`}
+        >
+          並び替え
+        </button>
+      )}
       {channels.map((channel, index) => {
         const active = selected === channel.key;
         const hiddenOnTouch = !showAll && index >= MOBILE_VISIBLE_COUNT;
@@ -178,18 +188,6 @@ export default function ChannelStrip({
           className={`${textButtonClassName} flex text-blue-600 hover:text-blue-700`}
         >
           すべて
-        </button>
-      )}
-      {channels.length > 1 && (
-        // スマホ・iPad では「続き」で全部を開いたときだけ出して、閉じているときの行を詰めすぎないようにする
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className={`${textButtonClassName} flex text-gray-500 hover:text-gray-700 ${
-            showAll || hiddenCount <= 0 ? "" : "max-sm:hidden pointer-coarse:hidden"
-          }`}
-        >
-          並び替え
         </button>
       )}
     </div>
