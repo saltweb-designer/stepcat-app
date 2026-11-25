@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Check, Copy, CopyPlus, Pencil, Pin, Trash2 } from "lucide-react";
 import InlineAccordion from "./InlineAccordion";
-import NoteInlineForm from "./NoteInlineForm";
+import NoteInlineForm, { type NoteFormStatus } from "./NoteInlineForm";
+import NoteTopSaveButton from "./NoteTopSaveButton";
 import NoteImages from "./NoteImages";
 import NoteText from "./NoteText";
 import { toggleChecklistLine } from "@/lib/notes";
@@ -94,6 +95,9 @@ export default function NoteCard({
     }
   };
 
+  const formId = useId();
+  const [formStatus, setFormStatus] = useState<NoteFormStatus>({ canSubmit: false, saving: false });
+
   const handleSave = async (categoryId: string, text: string) => {
     await onSave(categoryId, text);
     setEditing(false);
@@ -105,6 +109,7 @@ export default function NoteCard({
         <span className="inline-flex shrink-0 items-center rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-500">
           {categoryName}
         </span>
+        {editing && <NoteTopSaveButton formId={formId} status={formStatus} label="更新" />}
         {!editing && (
           <div className="flex shrink-0 items-center gap-0.5">
             <button
@@ -169,6 +174,8 @@ export default function NoteCard({
 
       <InlineAccordion open={editing}>
         <NoteInlineForm
+          formId={formId}
+          onStatusChange={setFormStatus}
           active={editing}
           initialCategoryId={note.categoryId}
           initialText={note.text}

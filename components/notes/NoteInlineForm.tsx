@@ -6,7 +6,12 @@ import PendingImagePicker, { revokePendingImages, type PendingImage } from "./Pe
 import { continueChecklistOnEnter, toggleChecklistPrefix, UNCATEGORIZED_ID } from "@/lib/notes";
 import type { NoteCategoryDoc } from "@/lib/types";
 
+/** フォームの外に置く保存ボタンが、押せるかどうか・保存中かどうかを表示に使う */
+export type NoteFormStatus = { canSubmit: boolean; saving: boolean };
+
 export default function NoteInlineForm({
+  formId,
+  onStatusChange,
   active,
   initialCategoryId,
   initialText,
@@ -17,6 +22,9 @@ export default function NoteInlineForm({
   submitLabel,
   withImages = false,
 }: {
+  /** フォーム外の保存ボタン（form 属性）から送信できるよう、form 要素に付ける id */
+  formId?: string;
+  onStatusChange?: (status: NoteFormStatus) => void;
   /** 親のアコーディオンが開いているかどうか。true になったタイミングでのみフォーカス・スクロールする */
   active: boolean;
   initialCategoryId: string;
@@ -66,6 +74,11 @@ export default function NoteInlineForm({
     }, 200);
     return () => clearTimeout(timer);
   }, [active, initialCategoryId, initialText]);
+
+  const canSubmit = text.trim() !== "" && !saving;
+  useEffect(() => {
+    onStatusChange?.({ canSubmit, saving });
+  }, [onStatusChange, canSubmit, saving]);
 
   const resolvedCategoryId =
     categoryId !== UNCATEGORIZED_ID && !categories.some((c) => c.id === categoryId) ? UNCATEGORIZED_ID : categoryId;
@@ -123,7 +136,7 @@ export default function NoteInlineForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 pt-3">
+    <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-3 pt-3">
       <div>
         <div className="mb-1.5 flex items-center justify-between">
           <label className="text-xs font-semibold text-gray-500">カテゴリ</label>
@@ -189,7 +202,7 @@ export default function NoteInlineForm({
         </button>
         <button
           type="submit"
-          disabled={text.trim() === "" || saving}
+          disabled={!canSubmit}
           className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           {saving ? "保存中..." : submitLabel}

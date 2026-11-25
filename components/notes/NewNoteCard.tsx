@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Plus } from "lucide-react";
 import InlineAccordion from "./InlineAccordion";
-import NoteInlineForm from "./NoteInlineForm";
+import NoteInlineForm, { type NoteFormStatus } from "./NoteInlineForm";
+import NoteTopSaveButton from "./NoteTopSaveButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { addNoteImages } from "@/hooks/useNoteImages";
 import type { NoteCategoryDoc } from "@/lib/types";
@@ -22,6 +23,8 @@ export default function NewNoteCard({
 }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const formId = useId();
+  const [formStatus, setFormStatus] = useState<NoteFormStatus>({ canSubmit: false, saving: false });
 
   const handleSave = async (categoryId: string, text: string, images: File[]) => {
     const noteId = await onCreate(categoryId, text);
@@ -40,7 +43,10 @@ export default function NewNoteCard({
   return (
     <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-4 shadow-sm">
       {open ? (
-        <p className="text-xs font-semibold text-gray-500">新規ノート</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-gray-500">新規ノート</p>
+          <NoteTopSaveButton formId={formId} status={formStatus} label="追加" />
+        </div>
       ) : (
         <button
           type="button"
@@ -54,6 +60,8 @@ export default function NewNoteCard({
 
       <InlineAccordion open={open}>
         <NoteInlineForm
+          formId={formId}
+          onStatusChange={setFormStatus}
           active={open}
           initialCategoryId={initialCategoryId}
           initialText=""
