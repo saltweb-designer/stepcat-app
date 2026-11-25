@@ -1,4 +1,4 @@
-import { ListTodo, NotebookText } from "lucide-react";
+import { NotebookText } from "lucide-react";
 import type { DayEntry } from "@/lib/types";
 import ScheduleBadge from "./ScheduleBadge";
 import TaskChecklist from "./TaskChecklist";
@@ -73,11 +73,8 @@ export default function DayCard({ entry }: { entry: DayEntry }) {
 
       <DayPhotos date={entry.date} />
 
-      {/* タスクは行動の起点より上に置き、メモ欄と同じ形でタップ1回で追加できるようにする */}
-      <div className="mb-3 flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2.5">
-        <ListTodo className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
-        <TaskChecklist tasks={entry.tasks} date={entry.date} />
-      </div>
+      {/* タスクは行動の起点より上に置き、自分起点と同じ見出し＋アコーディオンの形にする */}
+      <TaskChecklist tasks={entry.tasks} date={entry.date} />
 
       <ActionLogSection date={entry.date} />
 

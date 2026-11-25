@@ -15,11 +15,11 @@ import SelfPresetEditor from "./SelfPresetEditor";
 /** sheet: スマホでは入力カードを画面中央に出す(その場の入力欄だとキーボードに隠れやすいため) */
 type Editing = { origin: ActionOrigin; id: string | null; sheet: boolean } | null;
 
-function isTouchDevice() {
+export function isTouchDevice() {
   return window.matchMedia("(pointer: coarse)").matches;
 }
 
-function ItemInput({
+export function ItemInput({
   initialText,
   placeholder,
   onSubmit,
