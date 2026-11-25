@@ -143,8 +143,15 @@ export default function ActionLogSection({
 
   const startEditing = (origin: ActionOrigin, id: string | null) => {
     setEditing({ origin, id, sheet: inputPlacement === "auto" && isTouchDevice() });
-    // 畳んだままだと追加した項目が見えないため開いておく
+    // 畳んだままだと追加した項目が見えないため開いておく。
+    // ただし自分起点の追加は、よく使う項目のチェックで追加済みが分かるので畳んだままにする
+    if (origin === "self" && id === null) return;
     setOpenOrigins((prev) => ({ ...prev, [origin]: true }));
+  };
+
+  /** 自分起点は追加したら自動で畳む(開いたままだと縦に長くなるため) */
+  const closeAfterAdd = (origin: ActionOrigin) => {
+    if (origin === "self") setOpenOrigins((prev) => ({ ...prev, self: false }));
   };
 
   const sheetOrigin = editing?.sheet ? ACTION_ORIGINS.find((o) => o.key === editing.origin) : undefined;
@@ -308,6 +315,7 @@ export default function ActionLogSection({
               addedTexts={items.map((item) => item.text)}
               onSubmit={async (text) => {
                 await addItem(origin.key, text);
+                closeAfterAdd(origin.key);
                 setAddInputKey((k) => k + 1);
               }}
               onCancel={() => setEditing(null)}
@@ -344,6 +352,7 @@ export default function ActionLogSection({
               onSubmit={async (text) => {
                 // 入力カードは1件保存したら閉じる。続けて追加するときは「追加」ボタンから開き直す
                 await addItem(sheetOrigin.key, text);
+                closeAfterAdd(sheetOrigin.key);
                 setEditing(null);
               }}
               onCancel={() => setEditing(null)}

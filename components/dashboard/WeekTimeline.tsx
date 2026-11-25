@@ -57,7 +57,7 @@ export default function WeekTimeline() {
         <Link
           href="/ai"
           aria-label="ボディーメイク・食事についてAIに聞く"
-          className="flex h-[30px] items-center rounded-full border border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 shadow-sm transition-colors hover:bg-gray-50"
+          className="flex h-[30px] items-center rounded-full bg-black px-3 text-xs font-bold text-white shadow-sm transition-colors hover:bg-gray-800"
         >
           AI
         </Link>
