@@ -3,15 +3,19 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
-/** 「よく使う自分起点」を1行ずつ追加・編集・削除する */
+/** 「よく使う項目」を1行ずつ追加・編集・削除する（自分起点・タスクで共用） */
 export default function SelfPresetEditor({
   initialItems,
   onSave,
   onClose,
+  description = "追加するときにタップで選べる、よく使う自分起点の項目です。",
+  placeholder = "例：読書",
 }: {
   initialItems: string[];
   onSave: (items: string[]) => Promise<void>;
   onClose: () => void;
+  description?: string;
+  placeholder?: string;
 }) {
   /** 行を削除しても入力欄がずれないよう、行ごとに key を持たせる */
   const [rows, setRows] = useState(() => initialItems.map((text, index) => ({ key: index, text })));
@@ -38,7 +42,7 @@ export default function SelfPresetEditor({
 
   return (
     <div className="mt-1.5 flex flex-col gap-1.5 rounded-lg bg-white/80 p-2.5">
-      <p className="text-[11px] text-gray-500">追加するときにタップで選べる、よく使う自分起点の項目です。</p>
+      <p className="text-[11px] text-gray-500">{description}</p>
       {rows.length > 0 && (
         <ul className="flex flex-col gap-1">
           {rows.map((row) => (
@@ -49,7 +53,7 @@ export default function SelfPresetEditor({
                   setRows((prev) => prev.map((r) => (r.key === row.key ? { ...r, text: e.target.value } : r)))
                 }
                 autoFocus={row.key >= initialItems.length}
-                placeholder="例：読書"
+                placeholder={placeholder}
                 className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-base text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 sm:text-sm"
               />
               <button
