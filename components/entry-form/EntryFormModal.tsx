@@ -101,14 +101,17 @@ export default function EntryFormModal({
   const canSave = (detail.trim() !== "" || link.trim() !== "") && !saving;
   const formRef = useRef<HTMLFormElement>(null);
   const detailSectionRef = useRef<HTMLDivElement>(null);
-  /** 日付カードのメモ欄から開いたときは、すぐ書けるよう内容欄をフォームの一番上に出す */
-  const scrollToDetail = !isEdit && initialCategory === "memo";
+  const allDaySectionRef = useRef<HTMLDivElement>(null);
+  /** 日付カードのメモ欄から開いたときは、すぐ書けるよう内容欄をフォームの一番上に出す。
+   *  タスク欄から開いたときは「終日」から上に出し、時間の指定と内容の入力をまとめて見せる */
+  const scrollTarget = isEdit ? null : initialCategory === "memo" ? "detail" : initialCategory === "task" ? "allDay" : null;
+  const scrollToDetail = scrollTarget !== null;
 
   useEffect(() => {
     if (!scrollToDetail) return;
     const align = () => {
       const form = formRef.current;
-      const section = detailSectionRef.current;
+      const section = scrollTarget === "allDay" ? allDaySectionRef.current : detailSectionRef.current;
       if (!form || !section) return;
       form.scrollTop = section.getBoundingClientRect().top - form.getBoundingClientRect().top + form.scrollTop - 16;
     };
@@ -121,7 +124,7 @@ export default function EntryFormModal({
       viewport?.removeEventListener("resize", align);
       window.clearTimeout(timer);
     };
-  }, [scrollToDetail]);
+  }, [scrollToDetail, scrollTarget]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -326,7 +329,7 @@ export default function EntryFormModal({
               </div>
             )}
 
-            <div>
+            <div ref={allDaySectionRef}>
               <div className="flex items-center justify-between">
                 <label htmlFor="entry-all-day" className="text-xs font-semibold text-gray-500">
                   終日
